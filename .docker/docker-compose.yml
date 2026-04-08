@@ -1,0 +1,16 @@
+services:
+  backend:
+    build:
+      context: ..
+      dockerfile: .docker/node/Dockerfile
+    ports:
+      - "3000:3000"
+    env_file:
+      - ../.env
+    volumes:
+      # SQLite soubor přežije restart kontejneru
+      - db-data:/app/data
+    restart: unless-stopped
+
+volumes:
+  db-data:
