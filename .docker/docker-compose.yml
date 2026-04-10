@@ -12,5 +12,14 @@ services:
       - db-data:/app/data
     restart: unless-stopped
 
+  sqlite-web:
+    image: coleifer/sqlite-web
+    ports:
+      - "8081:8080"
+    volumes:
+      - db-data:/data
+    command: sqlite_web -x -H 0.0.0.0 /data/panobed.db
+    restart: unless-stopped
+
 volumes:
   db-data:

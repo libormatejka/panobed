@@ -1,4 +1,5 @@
-COMPOSE = docker compose --project-name panobed -f .docker/docker-compose.yml
+COMPOSE      = docker compose --project-name panobed -f .docker/docker-compose.yml
+COMPOSE_PROD = docker compose --project-name panobed -f .docker/docker-compose.yml -f .docker/docker-compose.prod.yml
 
 # ── Základní operace ──────────────────────────────────────────────────────────
 
@@ -40,10 +41,41 @@ db\:reset:
 db\:menus:
 	$(COMPOSE) exec backend node db/print-menus.js
 
+# ── Scraping ──────────────────────────────────────────────────────────────────
+
+# Spustí scraper pro menicka.cz (předej URLs jako URLS="url1 url2")
+scrape\:menicka:
+	$(COMPOSE) exec backend node scraper/menicka.js $(URLS)
+
+# Scraping všech restaurací v Pardubicích (načte seznam z menicka.cz/pardubice.html)
+scrape\:pardubice:
+	$(COMPOSE) exec backend sh -c \
+		"node scraper/get-city-urls.js pardubice | xargs node scraper/menicka.js"
+
+# Scraping pro jiné město (CITY=hradec-kralove)
+scrape\:city:
+	$(COMPOSE) exec backend sh -c \
+		"node scraper/get-city-urls.js $(CITY) | xargs node scraper/menicka.js"
+
 # ── Produkce ──────────────────────────────────────────────────────────────────
 
-# Spustí celý stack (build + up)
+# Lokální vývoj: build + up
 start:
 	$(COMPOSE) up -d --build
 
-.PHONY: up down restart build rebuild logs shell install start
+# Produkční start (porty jen na localhost, přes Caddy)
+prod-up:
+	$(COMPOSE_PROD) up -d --build
+
+prod-down:
+	$(COMPOSE_PROD) down
+
+prod-logs:
+	$(COMPOSE_PROD) logs -f
+
+# Pull + rebuild + restart (pro update na serveru)
+prod-deploy:
+	git pull
+	$(COMPOSE_PROD) up -d --build
+
+.PHONY: up down restart build rebuild logs shell install start prod-up prod-down prod-logs prod-deploy

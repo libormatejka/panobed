@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pan Oběd</title>
+  <link rel="stylesheet" href="chat.css">
+</head>
+<body>
+
+  <div id="chat-container">
+    <div id="chat-header">
+      <span class="avatar">🍽️</span>
+      <div>
+        <strong>Pan Oběd</strong>
+        <small>Najdu ti oběd v okolí</small>
+      </div>
+    </div>
+
+    <div id="chat-messages"></div>
+
+    <div id="chat-input-row">
+      <input
+        id="chat-input"
+        type="text"
+        placeholder="Napiš město nebo dotaz…"
+        autocomplete="off"
+      />
+      <button id="chat-send">Odeslat</button>
+    </div>
+  </div>
+
+  <script src="chat.js"></script>
+</body>
+</html>

@@ -29,6 +29,16 @@ CREATE TABLE IF NOT EXISTS menu_items (
   price         INTEGER        -- cena v haléřích (např. 12900 = 129 Kč), NULL = cena není uvedena
 );
 
+CREATE TABLE IF NOT EXISTS chat_log (
+  id            INTEGER PRIMARY KEY AUTOINCREMENT,
+  created_at    TEXT NOT NULL DEFAULT (datetime('now')),
+  user_message  TEXT NOT NULL,   -- dotaz uživatele
+  bot_reply     TEXT NOT NULL,   -- odpověď chatbota
+  input_tokens  INTEGER NOT NULL DEFAULT 0,
+  output_tokens INTEGER NOT NULL DEFAULT 0,
+  cost_usd      REAL NOT NULL DEFAULT 0  -- cena v USD
+);
+
 -- Indexy pro rychlé vyhledávání
 CREATE INDEX IF NOT EXISTS idx_restaurants_city  ON restaurants(city_id);
 CREATE INDEX IF NOT EXISTS idx_daily_menus_rest  ON daily_menus(restaurant_id);

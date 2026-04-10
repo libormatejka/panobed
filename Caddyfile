@@ -1,0 +1,4 @@
+# Nahraď panobed.vas-domena.cz svojí doménou
+panobed.vas-domena.cz {
+    reverse_proxy localhost:3000
+}

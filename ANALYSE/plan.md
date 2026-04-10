@@ -44,59 +44,45 @@ Uživatel → Chat Widget (HTML/JS)
 ## FÁZE 2 – Backend API
 
 ### 2.1 Inicializace projektu
-- [ ] `npm init` – Node.js projekt
-- [ ] Nainstalovat závislosti: `express`, `pg`, `@anthropic-ai/sdk`, `dotenv`, `cors`
-- [ ] Nastavit `.env` soubor (DB connection string, Anthropic API key)
-- [ ] Nastavit `.gitignore` (node_modules, .env)
-- [ ] Základní struktura složek: `src/routes`, `src/db`, `src/tools`, `src/claude`
+- [x] `npm init` – Node.js projekt, `package.json` se závislostmi
+- [x] Nainstalovat závislosti: `express`, `better-sqlite3`, `@anthropic-ai/sdk`, `dotenv`, `cors`
+- [x] Nastavit `.env` soubor + `.gitignore`
+- [x] Struktura: `src/db.js`, `src/queries.js`, `src/tools.js`, `src/claude.js`, `src/index.js`
 
-### 2.2 Databázová vrstva (src/db)
-- [ ] Vytvořit `db.js` – připojení k PostgreSQL (connection pool)
-- [ ] Vytvořit `queries/restaurants.js` – funkce pro dotazy na restaurace
-- [ ] Vytvořit `queries/menus.js` – funkce pro dotazy na menu podle města a data
-- [ ] Otestovat každou query funkci samostatně (manuální test)
+### 2.2 Databázová vrstva
+- [x] `src/db.js` – připojení k SQLite
+- [x] `src/queries.js` – `searchMenus`, `listCities`, `getRestaurantDetail`
 
-### 2.3 Claude Tools (src/tools)
-- [ ] Definovat tool `search_menus(city, date)` – vrátí menu v daném městě a dni
-- [ ] Definovat tool `list_cities()` – vrátí dostupná města v databázi
-- [ ] Definovat tool `get_restaurant_detail(restaurant_id)` – detail restaurace (adresa, telefon)
-- [ ] Napsat system prompt v češtině (Pan Oběd je přátelský, stručný, reaguje česky)
+### 2.3 Claude Tools
+- [x] `src/tools.js` – definice tools + `executeTool`
+- [x] System prompt v češtině
 
-### 2.4 Chat endpoint (src/routes)
-- [ ] Vytvořit `POST /api/chat` – přijme `{ message, session_id }`
-- [ ] Implementovat smyčku: zpráva → Claude → tool call → DB → Claude → odpověď
-- [ ] Ošetřit chyby (DB nedostupná, Claude API chyba, prázdný dotaz)
-- [ ] Přidat základní rate limiting (max N dotazů / minuta / IP)
-- [ ] Vrátit `{ reply, sources[] }` – odpověď + seznam restaurací jako zdroje
+### 2.4 Chat endpoint
+- [x] `POST /api/chat` – smyčka zpráva → Claude → tool call → DB → odpověď
+- [x] Ošetření chyb
 
 ### 2.5 Testování backendu
-- [ ] Otestovat `/api/chat` přes curl nebo Postman
-- [ ] Dotaz: "Co mají dnes v Pardubicích?"
-- [ ] Dotaz: "Kde mají polévku do 50 Kč?"
-- [ ] Dotaz: "Jaká je adresa restaurace X?"
-- [ ] Dotaz s překlep nebo neznámým městem – ověřit fallback odpověď
+- [x] Dotaz: "Co mají dnes v Pardubicích?" → ✅ funguje
 
 ---
 
 ## FÁZE 3 – Chat widget (Frontend)
 
 ### 3.1 Základní chat UI
-- [ ] Vytvořit `widget/index.html` – jednoduchá chat stránka pro vývoj/demo
-- [ ] Vytvořit `widget/chat.js` – pure JS, žádný framework
-- [ ] Implementovat: odeslání zprávy, zobrazení odpovědi, loading stav
-- [ ] Responzivní design (mobile-first, funguje na 320px+)
+- [x] `widget/index.html` – demo stránka
+- [x] `widget/chat.js` – pure JS, odeslání, odpověď, loading, typing indicator
+- [x] `widget/chat.css` – responzivní design, mobile-first
+- [x] Servováno přes Express static (`/`)
 
 ### 3.2 Embeddable script
 - [ ] Zabalit widget do `<script>` tagu – `widget.js`
 - [ ] Tlačítko (chat bubble) v rohu stránky, klik otevře chat okno
-- [ ] Konfigurace přes `data-` atributy: `data-api-url`, `data-city` (volitelný výchozí)
+- [ ] Konfigurace přes `data-` atributy: `data-api-url`, `data-city`
 - [ ] Otestovat embed na prázdné HTML stránce
 
-### 3.3 UX detaily
-- [ ] Uvítací zpráva od Pan Oběda při otevření chatu
+### 3.3 UX detaily (post-POC)
 - [ ] Zobrazit restaurace jako karty (název, adresa, cena menu)
 - [ ] Odkaz "Zobrazit na mapě" (Google Maps URL z adresy)
-- [ ] Datum a čas v UI – ať uživatel vidí, pro který den jsou data
 
 ---
 
