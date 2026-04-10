@@ -128,11 +128,15 @@
     window.dataLayer = window.dataLayer || [];
     window.dataLayer.push({ event: 'prompt_inserted' });
 
+    const controller = new AbortController();
+    const timeout    = setTimeout(() => controller.abort(), 120_000);
+
     try {
       const res  = await fetch(API_URL, {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify({ message: text, history: conversationHistory, client_id: CLIENT_ID }),
+        signal:  controller.signal,
       });
       const data = await res.json();
       if (data.history) conversationHistory = data.history;
@@ -141,9 +145,14 @@
       if (data.suggestions?.length) {
         appendQuickReplies(data.suggestions.map(s => ({ label: s, query: s })));
       }
-    } catch {
-      appendMessage('bot', 'Nepodařilo se spojit se serverem.');
+    } catch (err) {
+      if (err.name === 'AbortError') {
+        appendMessage('bot', 'Dotaz trval příliš dlouho. Zkus to prosím znovu.');
+      } else {
+        appendMessage('bot', 'Nepodařilo se spojit se serverem.');
+      }
     } finally {
+      clearTimeout(timeout);
       setLoading(false);
     }
   }
