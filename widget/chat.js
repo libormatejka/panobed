@@ -10,6 +10,15 @@
 
   let conversationHistory = [];
 
+  function getClientId() {
+    const ga = document.cookie.split('; ').find(c => c.startsWith('_ga='));
+    if (!ga) return null;
+    const parts = ga.split('=')[1].split('.');
+    return parts.length >= 4 ? `${parts[2]}.${parts[3]}` : null;
+  }
+
+  const CLIENT_ID = getClientId();
+
   // Sidebar toggle (mobil)
   toggleBtn.addEventListener('click', () => sidebar.classList.toggle('open'));
 
@@ -42,10 +51,9 @@
   function initWelcome() {
     appendMessage('bot', 'Ahoj! Jsem Pan Oběd. 👋 Řekni mi město a já ti najdu dnešní menu.');
     appendQuickReplies([
-      'Pardubice dnes',
-      'Pardubice zítra',
-      'Nejlevnější oběd v Pardubicích',
-      'Co doporučuješ?',
+      { label: 'Dnešní menu v Pardubicích',   query: 'Dnešní menu v Pardubicích' },
+      { label: 'Zítřejší menu v Pardubicích', query: 'Zítřejší menu v Pardubicích' },
+      { label: 'Tradiční česká jídla',        query: 'Které restaurace mají dnes v Pardubicích tradiční česká jídla jako svíčková, guláš nebo řízek?' },
     ]);
   }
 
@@ -65,16 +73,14 @@
       const label     = document.getElementById('popular-label');
       label.style.display = '';
 
-      data.forEach(({ user_message }) => {
+      data.forEach(({ label, query }) => {
         const btn = document.createElement('button');
         btn.className = 'nav-btn';
-        btn.dataset.query = user_message;
-        btn.textContent = '🔍 ' + (user_message.length > 35
-          ? user_message.slice(0, 35) + '…'
-          : user_message);
+        btn.dataset.query = query;
+        btn.textContent = '🔍 ' + label;
         btn.addEventListener('click', () => {
           sidebar.classList.remove('open');
-          inputEl.value = user_message;
+          inputEl.value = query;
           sendMessage();
         });
         container.appendChild(btn);
@@ -92,15 +98,21 @@
     setLoading(true);
     appendMessage('user', escapeHtml(text));
 
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push({ event: 'prompt_inserted' });
+
     try {
       const res  = await fetch(API_URL, {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ message: text, history: conversationHistory }),
+        body:    JSON.stringify({ message: text, history: conversationHistory, client_id: CLIENT_ID }),
       });
       const data = await res.json();
       if (data.history) conversationHistory = data.history;
       appendMessage('bot', formatReply(data.reply || data.error || 'Něco se pokazilo.'));
+      if (data.suggestions?.length) {
+        appendQuickReplies(data.suggestions.map(s => ({ label: s, query: s })));
+      }
     } catch {
       appendMessage('bot', 'Nepodařilo se spojit se serverem.');
     } finally {
@@ -111,14 +123,15 @@
   function appendQuickReplies(options) {
     const wrap = document.createElement('div');
     wrap.className = 'quick-replies';
-    wrap.id = 'quick-replies';
-    options.forEach(text => {
+    options.forEach(item => {
+      const label = typeof item === 'string' ? item : item.label;
+      const query = typeof item === 'string' ? item : item.query;
       const btn = document.createElement('button');
       btn.className = 'quick-reply-btn';
-      btn.textContent = text;
+      btn.textContent = label;
       btn.addEventListener('click', () => {
-        document.getElementById('quick-replies')?.remove();
-        inputEl.value = text;
+        wrap.remove();
+        inputEl.value = query;
         sendMessage();
       });
       wrap.appendChild(btn);
@@ -159,9 +172,21 @@
     }
   }
 
-  // Markdown-lite: **tučné**, nové řádky → <br>
+  // Markdown-lite: **tučné**, [text](url), nové řádky → <br>
   function formatReply(text) {
-    return escapeHtml(text)
+    // Nejdřív escapujeme HTML, pak aplikujeme markdown
+    // Poznámka: URL nechceme escapovat, proto zpracujeme odkazy před escapováním
+    const parts = [];
+    let last = 0;
+    const linkRe = /\[([^\]]+)\]\((\/r\/\d+)\)/g;
+    let m;
+    while ((m = linkRe.exec(text)) !== null) {
+      parts.push(escapeHtml(text.slice(last, m.index)));
+      parts.push(`<a href="${m[2]}" target="_blank" class="restaurant-link">${escapeHtml(m[1])}</a>`);
+      last = m.index + m[0].length;
+    }
+    parts.push(escapeHtml(text.slice(last)));
+    return parts.join('')
       .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
       .replace(/\n/g, '<br>');
   }

@@ -4,13 +4,17 @@ const { logChat } = require('./queries');
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-const SYSTEM_PROMPT = `Jsi Pan Oběd – přátelský asistent, který pomáhá najít oběd v restauracích.
+const SYSTEM_PROMPT = `Jsi Pan Oběd – přátelský asistent mužského rodu, který pomáhá najít oběd v restauracích. Vždy o sobě mluv v mužském rodě (jsem rád, našel jsem, doporučuji).
 Odpovídáš vždy česky, stručně a přehledně.
 Dnešní datum je ${new Date().toISOString().slice(0, 10)}.
 Pokud uživatel neuvede datum, použij dnešní datum.
 Pokud uživatel neuvede město, zeptej se ho.
 Výsledky prezentuj přehledně – každou restauraci na nový řádek s jejím menu.
-Pokud je výsledků více než 10, zobraz pouze 10 nejzajímavějších a uveď celkový počet dostupných restaurací. Nabídni upřesnění (typ kuchyně, cenová kategorie apod.).`;
+Pokud je výsledků více než 10, zobraz pouze 10 nejzajímavějších a uveď celkový počet dostupných restaurací. Nabídni upřesnění (typ kuchyně, cenová kategorie apod.).
+Při výpisu restaurací vždy formátuj název restaurace jako markdown odkaz na detail: [Název restaurace](/r/ID) kde ID je číslo z výsledků search_menus.
+Pokud se uživatel ptá na konkrétní typ jídla (tradiční, vegetariánské, ryby, apod.), použij search_menus pro dané město a datum, a z výsledků vyber pouze restaurace které mají v menu odpovídající jídla. Buď stručný.
+Na konec každé odpovědi přidej přesně tento řádek s 3 krátkými návrhy dalších dotazů ve formátu:
+[NÁVRHY: "první návrh", "druhý návrh", "třetí návrh"]`;
 
 const PRICE_INPUT  = 0.80 / 1_000_000;
 const PRICE_OUTPUT = 4.00 / 1_000_000;
@@ -24,7 +28,7 @@ function logUsage(usage, label = '') {
 
 // history – pole { role: 'user'|'assistant', content: string }
 // Vrátí { reply, history } kde history obsahuje celou aktualizovanou konverzaci
-async function chat(userMessage, history = []) {
+async function chat(userMessage, history = [], clientId = null) {
   // Sestavíme messages: předchozí historie + nová zpráva uživatele
   const messages = [
     ...history,
@@ -51,7 +55,14 @@ async function chat(userMessage, history = []) {
       logUsage({ input_tokens: totalInput, output_tokens: totalOutput }, ' total');
 
       const textBlock = response.content.find(b => b.type === 'text');
-      const reply = textBlock ? textBlock.text : '';
+      const rawReply  = textBlock ? textBlock.text : '';
+
+      // Parsuj a odděl návrhy od textu
+      const suggestionsMatch = rawReply.match(/\[NÁVRHY:\s*(.*?)\]\s*$/s);
+      const suggestions = suggestionsMatch
+        ? suggestionsMatch[1].match(/"([^"]+)"/g)?.map(s => s.replace(/"/g, '')) || []
+        : [];
+      const reply = rawReply.replace(/\[NÁVRHY:.*?\]\s*$/s, '').trimEnd();
 
       logChat({
         user_message: userMessage,
@@ -59,6 +70,7 @@ async function chat(userMessage, history = []) {
         input_tokens: totalInput,
         output_tokens: totalOutput,
         cost_usd: costUsd,
+        client_id: clientId,
       });
 
       // Vrátíme odpověď + aktualizovanou historii (jen text zprávy pro klienta)
@@ -67,7 +79,7 @@ async function chat(userMessage, history = []) {
         { role: 'assistant', content: reply },
       ];
 
-      return { reply, history: updatedHistory };
+      return { reply, history: updatedHistory, suggestions };
     }
 
     if (response.stop_reason === 'tool_use') {

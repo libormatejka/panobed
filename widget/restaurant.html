@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Detail restaurace – Pan Oběd</title>
+  <link rel="stylesheet" href="chat.css">
+  <style>
+    body { display: block; padding: 24px 16px; max-width: 640px; margin: 0 auto; background: #f0f2f5; }
+
+    .back-link { display: inline-flex; align-items: center; gap: 6px; color: #e65c00; text-decoration: none; font-size: 14px; margin-bottom: 20px; }
+    .back-link:hover { text-decoration: underline; }
+
+    .card { background: #fff; border-radius: 16px; box-shadow: 0 2px 12px rgba(0,0,0,.08); overflow: hidden; margin-bottom: 16px; }
+
+    .card-header { background: #1a1a2e; color: #fff; padding: 20px; }
+    .card-header h1 { font-size: 20px; margin-bottom: 8px; }
+    .card-header .meta { font-size: 13px; opacity: .75; display: flex; flex-direction: column; gap: 4px; }
+    .card-header a { color: #ffb380; }
+
+    .menu-day { padding: 16px 20px; border-bottom: 1px solid #f0f2f5; }
+    .menu-day:last-child { border-bottom: none; }
+    .menu-day h2 { font-size: 14px; font-weight: 600; color: #e65c00; margin-bottom: 10px; }
+
+    .menu-item { display: flex; justify-content: space-between; font-size: 14px; padding: 4px 0; color: #333; }
+    .menu-item .price { color: #666; white-space: nowrap; margin-left: 12px; }
+
+    .empty { padding: 24px 20px; color: #888; font-size: 14px; }
+
+    #loading { text-align: center; padding: 48px; color: #888; }
+  </style>
+</head>
+<body>
+  <a class="back-link" href="/">← Zpět na Pan Oběd</a>
+  <div id="loading">Načítám…</div>
+  <div id="content" style="display:none"></div>
+
+  <script>
+    const id = location.pathname.split('/').pop();
+
+    fetch(`/api/restaurant/${id}`)
+      .then(r => r.json())
+      .then(data => {
+        document.title = `${data.name} – Pan Oběd`;
+        document.getElementById('loading').style.display = 'none';
+        const el = document.getElementById('content');
+        el.style.display = '';
+
+        const meta = [
+          data.address ? `📍 ${data.address}` : null,
+          data.phone   ? `📞 ${data.phone}`   : null,
+          data.website ? `🌐 <a href="${data.website}" target="_blank">${data.website}</a>` : null,
+        ].filter(Boolean).map(s => `<span>${s}</span>`).join('');
+
+        const menus = data.menus.length
+          ? data.menus.map(day => {
+              const date = new Date(day.date);
+              const label = date.toLocaleDateString('cs-CZ', { weekday: 'long', day: 'numeric', month: 'long' });
+              const items = day.items.map(i => {
+                const price = i.price ? `${(i.price / 100).toFixed(0)} Kč` : '';
+                return `<div class="menu-item"><span>${i.name}</span>${price ? `<span class="price">${price}</span>` : ''}</div>`;
+              }).join('');
+              return `<div class="menu-day"><h2>${label}</h2>${items}</div>`;
+            }).join('')
+          : '<div class="empty">Pro tuto restauraci nejsou dostupná žádná menu.</div>';
+
+        el.innerHTML = `
+          <div class="card">
+            <div class="card-header">
+              <h1>${data.name}</h1>
+              <div class="meta">${meta}</div>
+            </div>
+            ${menus}
+          </div>`;
+      })
+      .catch(() => {
+        document.getElementById('loading').textContent = 'Restaurace nenalezena.';
+      });
+  </script>
+</body>
+</html>

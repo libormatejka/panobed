@@ -156,6 +156,16 @@ body {
   border-bottom-left-radius: 4px;
 }
 
+/* Odkaz na detail restaurace v bublině */
+.restaurant-link {
+  color: #e65c00;
+  font-weight: 600;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(230, 92, 0, 0.3);
+}
+.restaurant-link:hover { border-bottom-color: #e65c00; }
+.message.user .bubble .restaurant-link { color: #ffd0b0; border-bottom-color: rgba(255,208,176,.4); }
+
 /* Quick reply tlačítka */
 .quick-replies {
   display: flex;

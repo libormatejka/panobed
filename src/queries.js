@@ -31,6 +31,34 @@ function getRestaurantDetail(restaurantId) {
   `).get(restaurantId);
 }
 
+function getRestaurantWithMenus(restaurantId) {
+  const restaurant = db.prepare(`
+    SELECT id, name, address, phone, website
+    FROM restaurants WHERE id = ?
+  `).get(restaurantId);
+  if (!restaurant) return null;
+
+  const menus = db.prepare(`
+    SELECT dm.date, mi.name AS item, mi.price
+    FROM daily_menus dm
+    JOIN menu_items mi ON mi.daily_menu_id = dm.id
+    WHERE dm.restaurant_id = ?
+    ORDER BY dm.date, mi.id
+  `).all(restaurantId);
+
+  // Seskup podle data
+  const byDate = {};
+  for (const row of menus) {
+    if (!byDate[row.date]) byDate[row.date] = [];
+    byDate[row.date].push({ name: row.item, price: row.price });
+  }
+  restaurant.menus = Object.entries(byDate)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([date, items]) => ({ date, items }));
+
+  return restaurant;
+}
+
 function listRestaurants(citySlug) {
   const sql = citySlug
     ? `SELECT r.id, r.name, r.address, r.phone, r.website, r.active, c.slug AS city
@@ -125,11 +153,11 @@ function deleteMenu(restaurantId, date) {
 
 // ── Chat log ──────────────────────────────────────────────────────────────────
 
-function logChat({ user_message, bot_reply, input_tokens, output_tokens, cost_usd }) {
+function logChat({ user_message, bot_reply, input_tokens, output_tokens, cost_usd, client_id }) {
   db.prepare(`
-    INSERT INTO chat_log (user_message, bot_reply, input_tokens, output_tokens, cost_usd)
-    VALUES (?, ?, ?, ?, ?)
-  `).run(user_message, bot_reply, input_tokens, output_tokens, cost_usd);
+    INSERT INTO chat_log (user_message, bot_reply, input_tokens, output_tokens, cost_usd, client_id)
+    VALUES (?, ?, ?, ?, ?, ?)
+  `).run(user_message, bot_reply, input_tokens, output_tokens, cost_usd, client_id ?? null);
 }
 
 function getPopularQueries(limit = 5) {
@@ -143,7 +171,7 @@ function getPopularQueries(limit = 5) {
 }
 
 module.exports = {
-  listCities, searchMenus, getRestaurantDetail,
+  listCities, searchMenus, getRestaurantDetail, getRestaurantWithMenus,
   listRestaurants, getMenusForDate,
   upsertCity,
   createRestaurant, updateRestaurant, deleteRestaurant,
