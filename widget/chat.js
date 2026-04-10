@@ -169,7 +169,13 @@
             messagesEl.scrollTop = messagesEl.scrollHeight;
 
           } else if (data.type === 'done') {
-            if (bubble) bubble.innerHTML = formatReply(data.reply);
+            if (bubble) {
+              bubble.style.opacity = '0';
+              setTimeout(() => {
+                bubble.innerHTML = formatReply(data.reply);
+                bubble.style.opacity = '';
+              }, 150);
+            }
             if (data.history) conversationHistory = data.history;
             if (data.response_time_ms) appendMeta(`⏱ ${(data.response_time_ms / 1000).toFixed(1)}s`);
             if (data.suggestions?.length) {

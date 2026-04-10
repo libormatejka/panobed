@@ -157,6 +157,7 @@ body {
   border-radius: 16px;
   font-size: 14px;
   line-height: 1.6;
+  transition: opacity 0.15s;
 }
 
 .message.user .bubble {
