@@ -13,141 +13,119 @@ Uživatel → Chat Widget (HTML/JS)
                ↓
            Claude API (tool use – rozumí dotazům)
                ↓
-           Databáze (PostgreSQL)
+           SQLite databáze (better-sqlite3)
 ```
 
 ---
 
-## FÁZE 1 – Databáze a datová vrstva
+## FÁZE 1 – Databáze a datová vrstva ✅
 
-### 1.1 Návrh schématu (POC – zjednodušeno)
-- [x] Definovat tabulku `cities` (id, name, slug)
-- [x] Definovat tabulku `restaurants` (id, name, address, city_id, phone, website, active)
-- [x] Definovat tabulku `daily_menus` (id, restaurant_id, date)
-- [x] Definovat tabulku `menu_items` (id, daily_menu_id, name, price) – bez typů, bez alergenů
-- [x] Rozhodnout: SQLite pro POC (soubor `panobed.db` v kořeni projektu)
+### 1.1 Návrh schématu
+- [x] Tabulka `cities` (id, name, slug)
+- [x] Tabulka `restaurants` (id, name, address, city_id, phone, website, active)
+- [x] Tabulka `daily_menus` (id, restaurant_id, date)
+- [x] Tabulka `menu_items` (id, daily_menu_id, name, price) – bez typů, bez alergenů
+- [x] Tabulka `chat_log` (id, created_at, user_message, bot_reply, input_tokens, output_tokens, cost_usd)
+- [x] SQLite pro POC
 
 ### 1.2 Nastavení databáze
-- [x] Napsat migrační SQL skript `db/001_init.sql`
-- [x] Napsat setup skript `db/setup.sh`
-- [ ] **Nainstalovat Node.js** (potřeba pro backend i spuštění DB skriptu přes `better-sqlite3`)
-- [ ] Spustit `db/setup.sh` a ověřit data
+- [x] Migrační SQL skript `db/001_init.sql`
+- [x] Setup skript `db/setup.js` s migrační tabulkou `_migrations` (idempotentní)
 
-### 1.3 Seed data (testovací data)
-- [x] Přidat 1 město (Pardubice)
-- [x] Přidat 5 testovacích restaurací s adresami
-- [x] Přidat denní menu pro každou restauraci (dnes 2026-04-08 + zítra 2026-04-09) → `db/002_seed.sql`
-- [ ] Ověřit data po spuštění setup skriptu
+### 1.3 Seed data
+- [x] 1 město (Pardubice), 5 testovacích restaurací
 
 ---
 
-## FÁZE 2 – Backend API
+## FÁZE 2 – Backend API ✅
 
 ### 2.1 Inicializace projektu
-- [x] `npm init` – Node.js projekt, `package.json` se závislostmi
-- [x] Nainstalovat závislosti: `express`, `better-sqlite3`, `@anthropic-ai/sdk`, `dotenv`, `cors`
-- [x] Nastavit `.env` soubor + `.gitignore`
-- [x] Struktura: `src/db.js`, `src/queries.js`, `src/tools.js`, `src/claude.js`, `src/index.js`
+- [x] Node.js + Express, Docker, docker-compose
+- [x] Závislosti: `express`, `better-sqlite3`, `@anthropic-ai/sdk`, `dotenv`, `cors`, `express-rate-limit`
+- [x] `.env` soubor + `.gitignore`
 
 ### 2.2 Databázová vrstva
 - [x] `src/db.js` – připojení k SQLite
-- [x] `src/queries.js` – `searchMenus`, `listCities`, `getRestaurantDetail`
+- [x] `src/queries.js` – read + write funkce, logování nákladů
 
 ### 2.3 Claude Tools
-- [x] `src/tools.js` – definice tools + `executeTool`
-- [x] System prompt v češtině
+- [x] `src/tools.js` – `list_cities`, `search_menus`, `get_restaurant_detail`
+- [x] System prompt v češtině, zobrazuje max 10 restaurací
 
 ### 2.4 Chat endpoint
-- [x] `POST /api/chat` – smyčka zpráva → Claude → tool call → DB → odpověď
-- [x] Ošetření chyb
-
-### 2.5 Testování backendu
-- [x] Dotaz: "Co mají dnes v Pardubicích?" → ✅ funguje
+- [x] `POST /api/chat` – tool use smyčka
+- [x] Konverzační historie – klient posílá `history[]`, server vrací aktualizovanou historii
+- [x] Rate limiting (20 req/min na IP)
+- [x] Logování nákladů do DB po každém dotazu
 
 ---
 
-## FÁZE 3 – Chat widget (Frontend)
+## FÁZE 3 – Chat widget ✅
 
 ### 3.1 Základní chat UI
-- [x] `widget/index.html` – demo stránka
-- [x] `widget/chat.js` – pure JS, odeslání, odpověď, loading, typing indicator
-- [x] `widget/chat.css` – responzivní design, mobile-first
-- [x] Servováno přes Express static (`/`)
+- [x] `widget/index.html`, `widget/chat.js`, `widget/chat.css`
+- [x] Konverzační historie v paměti prohlížeče (reset při refreshi)
+- [x] Typing indicator, loading state
 
 ### 3.2 Embeddable script
-- [ ] Zabalit widget do `<script>` tagu – `widget.js`
-- [ ] Tlačítko (chat bubble) v rohu stránky, klik otevře chat okno
-- [ ] Konfigurace přes `data-` atributy: `data-api-url`, `data-city`
-- [ ] Otestovat embed na prázdné HTML stránce
-
-### 3.3 UX detaily (post-POC)
-- [ ] Zobrazit restaurace jako karty (název, adresa, cena menu)
-- [ ] Odkaz "Zobrazit na mapě" (Google Maps URL z adresy)
+- [ ] Zabalit widget do `<script>` tagu
+- [ ] Chat bubble v rohu stránky
+- [ ] Konfigurace přes `data-` atributy
 
 ---
 
-## FÁZE 4 – Správa dat (Admin)
+## FÁZE 4 – Správa dat ✅
 
-### 4.1 Základní admin API
-- [ ] `POST /admin/restaurants` – přidat restauraci
-- [ ] `POST /admin/menus` – přidat denní menu
-- [ ] `PUT /admin/menus/:id` – upravit menu
-- [ ] `DELETE /admin/menus/:id` – smazat menu
-- [ ] Zabezpečit admin endpointy API klíčem (hlavička `X-Admin-Key`)
+### 4.1 Admin API
+- [x] CRUD pro města, restaurace, menu
+- [x] Zabezpečeno hlavičkou `X-Admin-Key`
+- [x] Dokumentace: `docs/AdminApi.md`
 
-### 4.2 Import dat (volitelné pro MVP)
-- [ ] Navrhnout CSV formát pro hromadný import menu
-- [ ] Endpoint `POST /admin/import` – nahrát CSV soubor
-- [ ] Validace dat při importu (datum, povinná pole)
+### 4.2 Scraping
+- [x] `scraper/scrape.js` – hlavní scraper (paralelní dávky po 5, cache)
+- [x] Zdroj: menicka.cz (80+ restaurací pro Pardubice)
+- [x] Konfigurace měst v `.env` (`SCRAPE_CITIES=pardubice,brno,...`)
+- [x] Idempotentní – přepíše menu při opakovaném spuštění
 
 ---
 
-## FÁZE 5 – Nasazení
+## FÁZE 5 – Nasazení ✅
 
-### 5.1 Příprava na produkci
-- [ ] Dockerfile pro backend
-- [ ] docker-compose.yml (backend + PostgreSQL)
-- [ ] Produkční environment variables
-- [ ] Health check endpoint `GET /health`
+### 5.1 Infrastruktura
+- [x] Dockerfile + docker-compose.yml
+- [x] docker-compose.prod.yml (porty na localhost)
+- [x] Caddy – reverse proxy + automatické HTTPS (Let's Encrypt)
+- [x] UFW firewall (porty 3000, 8081 zablokované zvenku)
 
 ### 5.2 Deployment
-- [ ] Vybrat hosting (Railway / Render / VPS)
-- [ ] Nastavit produkční DB (managed PostgreSQL)
-- [ ] Nasadit a ověřit funkčnost
-- [ ] Nastavit SSL / HTTPS
+- [x] Forpsi Cloud VPS (Ubuntu 24.04, OpenStack, 2GB RAM)
+- [x] https://panobed.cz – chatbot v produkci
+- [x] https://db.panobed.cz – sqlite-web s basic auth
+- [x] Cron – automatický scraping každý den v 7:00
+- [x] Logy scrapingu: `/var/log/panobed-scraper.log`
 
-### 5.3 Monitoring (základní)
-- [ ] Logování chyb (konzole → soubor nebo služba)
+### 5.3 Monitoring
 - [ ] Alert při výpadku API
+- [ ] Sledování nákladů Claude API
 
 ---
 
-## Pořadí priorit (MVP)
-
-| Priorita | Fáze | Výstup |
-|----------|------|--------|
-| 1 | 1.1 – 1.3 | Funkční DB se seed daty |
-| 2 | 2.1 – 2.5 | Backend API odpovídá na dotazy |
-| 3 | 3.1 – 3.2 | Embeddable widget |
-| 4 | 4.1 | Admin API pro přidávání dat |
-| 5 | 5.x | Nasazení na web |
-
----
-
-## Rozhodnutí a omezení POC
+## Rozhodnutí a omezení
 
 | Otázka | Rozhodnutí |
 |--------|-----------|
-| DB pro POC | SQLite (nulová konfigurace, soubor v projektu) |
+| DB | SQLite (nulová konfigurace, soubor v Docker volume) |
 | Menu položky | Plochá struktura – název + cena, bez typů a alergenů |
-| Kontext chatu | Single-turn (každá zpráva samostatně), bez session historie |
-| Město | Pardubice jako výchozí, struktura generická |
+| Kontext chatu | Konverzační historie v paměti prohlížeče (reset při refreshi) |
+| Výsledky | Max 10 restaurací v odpovědi, pak nabídka upřesnění |
 | Backend | Node.js + Express |
-| Data | Ručně zadaná seed data pro POC |
+| Hosting | Forpsi Cloud VPS, 50–160 Kč/měs |
+| Data | Scraping z menicka.cz, automaticky každý den 7:00 |
 
-## Otevřené otázky (post-POC)
+## Otevřené otázky (budoucí verze)
 
-1. **Odkud přicházejí data?** Ruční zadávání vs. scraping webu restaurací
-2. **Kontext konverzace?** Přidat session historii po POC?
-3. **Typy položek?** Polévka / hlavní / dezert rozlišovat v dalši verzi?
-4. **Alergeny?** Přidat v další verzi?
+1. **Embeddable widget** – zabalit do `<script>` tagu pro embed na jiné weby
+2. **Více měst** – přidat další města do `SCRAPE_CITIES`
+3. **Typy položek** – rozlišovat polévku / hlavní / dezert
+4. **Alergeny** – přidat v další verzi
+5. **Monitoring nákladů** – alert při překročení limitu Claude API

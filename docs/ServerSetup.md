@@ -83,14 +83,34 @@ make rebuild
 
 ## Scraping menu
 
+Města se konfigurují v `/opt/panobed/.env` (proměnná `SCRAPE_CITIES`):
+```
+SCRAPE_CITIES=pardubice,hradec-kralove
+```
+
 ```bash
 cd /opt/panobed
 
-# Pardubice (všechny restaurace)
-docker exec panobed-backend-1 sh -c "node scraper/get-city-urls.js pardubice | xargs node scraper/menicka.js"
+# Všechna nakonfigurovaná města
+make scrape:all
+
+# Konkrétní město
+make scrape:city CITY=pardubice
 
 # Konkrétní URL
-docker exec panobed-backend-1 node scraper/menicka.js https://www.menicka.cz/...
+make scrape:menicka URLS="https://www.menicka.cz/1649-bohemska-hospoda.html"
+```
+
+### Automatický cron (každý den 7:00)
+
+Nastaveno přes `crontab -e`:
+```
+0 7 * * * cd /opt/panobed && docker compose --project-name panobed -f .docker/docker-compose.yml exec -T backend node scraper/scrape.js >> /var/log/panobed-scraper.log 2>&1
+```
+
+Zobrazit logy scrapingu:
+```bash
+tail -f /var/log/panobed-scraper.log
 ```
 
 ---
@@ -137,6 +157,19 @@ panobed.cz {
 www.panobed.cz {
     redir https://panobed.cz{uri} permanent
 }
+
+db.panobed.cz {
+    basicauth {
+        admin $2a$14$...HASH...
+    }
+    header Content-Security-Policy "upgrade-insecure-requests"
+    reverse_proxy localhost:8081
+}
 ```
 
 Soubor: `/etc/caddy/Caddyfile`
+
+Reload po změně:
+```bash
+systemctl reload caddy
+```
