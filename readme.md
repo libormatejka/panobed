@@ -87,7 +87,8 @@ Cena je uložena v **haléřích** – např. `12900` = 129 Kč.
 | `make db:reset` | smaže a znovu inicializuje DB (seed data) |
 | `make db:menus` | vypíše dnešní menu z DB do terminálu |
 | `make start` | build + up najednou |
-| `make scrape:all` | nascrapuje menu ze všech uložených restaurací (menicka.cz) |
+| `make scrape:all` | nascrapuje menu pro všechna města z `SCRAPE_CITIES` v Makefile |
+| `make scrape:city CITY=brno` | nascrapuje konkrétní město |
 | `make scrape:menicka URLS="<url>"` | nascrapuje konkrétní URL z menicka.cz |
 
 ---
@@ -96,9 +97,24 @@ Cena je uložena v **haléřích** – např. `12900` = 129 Kč.
 
 Scraper stahuje denní menu z [menicka.cz](https://www.menicka.cz) a ukládá je do DB přes Admin API.
 
+### Konfigurace měst
+
+Města pro scraping se nastavují v `Makefile` jako proměnná `SCRAPE_CITIES`:
+
+```makefile
+SCRAPE_CITIES = pardubice hradec-kralove brno
+```
+
+Slug města odpovídá URL na menicka.cz – např. `menicka.cz/hradec-kralove.html` → slug je `hradec-kralove`.
+
+### Příkazy
+
 ```bash
-# Nascrapuje všechny uložené restaurace
+# Nascrapuje všechna města z SCRAPE_CITIES
 make scrape:all
+
+# Nascrapuje konkrétní město
+make scrape:city CITY=hradec-kralove
 
 # Nascrapuje konkrétní URL
 make scrape:menicka URLS="https://www.menicka.cz/1064-nase-hospoda-smichovska.html"
@@ -108,11 +124,6 @@ Scraper automaticky:
 - přidá město a restauraci do DB pokud neexistují
 - přepíše menu pro daný den při opakovaném spuštění (idempotentní)
 - zpracuje více dnů najednou (menicka.cz zobrazuje menu na více dní dopředu)
-
-Aktuálně nakonfigurované restaurace (`make scrape:all`):
-- Naše Hospoda Smíchovská – https://www.menicka.cz/1064-nase-hospoda-smichovska.html
-- Bohémská Hospoda – https://www.menicka.cz/1649-bohemska-hospoda.html
-- Severka – https://www.menicka.cz/10036-severka.html
 
 ---
 

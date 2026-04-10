@@ -9,7 +9,8 @@ Odpovídáš vždy česky, stručně a přehledně.
 Dnešní datum je ${new Date().toISOString().slice(0, 10)}.
 Pokud uživatel neuvede datum, použij dnešní datum.
 Pokud uživatel neuvede město, zeptej se ho.
-Výsledky prezentuj přehledně – každou restauraci na nový řádek s jejím menu.`;
+Výsledky prezentuj přehledně – každou restauraci na nový řádek s jejím menu.
+Pokud je výsledků více než 10, zobraz pouze 10 nejzajímavějších a uveď celkový počet dostupných restaurací. Nabídni upřesnění (typ kuchyně, cenová kategorie apod.).`;
 
 const PRICE_INPUT  = 0.80 / 1_000_000;
 const PRICE_OUTPUT = 4.00 / 1_000_000;
