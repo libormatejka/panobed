@@ -34,7 +34,13 @@ body {
   border-bottom: 1px solid rgba(255,255,255,.1);
 }
 
-.logo-icon { font-size: 32px; }
+.logo-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
 
 #sidebar-logo strong { display: block; font-size: 17px; }
 #sidebar-logo small  { font-size: 12px; opacity: .6; }
@@ -132,9 +138,18 @@ body {
   gap: 12px;
 }
 
-.message { display: flex; }
+.message { display: flex; align-items: flex-end; gap: 8px; }
 .message.user { justify-content: flex-end; }
 .message.bot  { justify-content: flex-start; }
+
+.bot-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  align-self: flex-end;
+}
 
 .bubble {
   max-width: 70%;

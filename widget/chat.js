@@ -188,6 +188,14 @@
     const wrap = document.createElement('div');
     wrap.className = `message ${role}`;
 
+    if (role === 'bot') {
+      const avatar = document.createElement('img');
+      avatar.className = 'bot-avatar';
+      avatar.src = '/assets/chef.png';
+      avatar.alt = 'Pan Oběd';
+      wrap.appendChild(avatar);
+    }
+
     const bubble = document.createElement('div');
     bubble.className = 'bubble';
     bubble.innerHTML = html;
@@ -208,7 +216,7 @@
       const el = document.createElement('div');
       el.id = 'typing';
       el.className = 'message bot';
-      el.innerHTML = '<div class="bubble typing-dots"><span></span><span></span><span></span></div>';
+      el.innerHTML = '<img class="bot-avatar" src="/assets/chef.png" alt="Pan Oběd"><div class="bubble typing-dots"><span></span><span></span><span></span></div>';
       messagesEl.appendChild(el);
       messagesEl.scrollTop = messagesEl.scrollHeight;
     } else if (!active && existing) {
