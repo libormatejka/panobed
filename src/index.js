@@ -3,7 +3,7 @@ const express   = require('express');
 const cors      = require('cors');
 const path      = require('path');
 const rateLimit = require('express-rate-limit');
-const { chat } = require('./claude');
+const { chat, chatStream } = require('./claude');
 const { getPopularQueries, getRestaurantWithMenus, getCitiesToday } = require('./queries');
 const adminRouter = require('./admin');
 
@@ -82,6 +82,35 @@ app.get('/api/restaurant/:id', (req, res) => {
   const r = getRestaurantWithMenus(Number(req.params.id));
   if (!r) return res.status(404).json({ error: 'Restaurace nenalezena.' });
   res.json(r);
+});
+
+app.post('/api/chat/stream', chatLimiter, async (req, res) => {
+  const { message, history, client_id } = req.body;
+  if (!message || typeof message !== 'string' || message.trim() === '') {
+    return res.status(400).json({ error: 'Pole message je povinné.' });
+  }
+
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.flushHeaders();
+
+  const send = (data) => res.write(`data: ${JSON.stringify(data)}\n\n`);
+
+  try {
+    await chatStream(
+      message.trim(),
+      history || [],
+      client_id ?? null,
+      (text) => send({ type: 'token', text }),
+      (result) => send({ type: 'done', ...result }),
+    );
+  } catch (err) {
+    console.error('[chat/stream error]', err);
+    send({ type: 'error', message: 'Chyba při zpracování dotazu.' });
+  } finally {
+    res.end();
+  }
 });
 
 app.post('/api/chat', chatLimiter, async (req, res) => {

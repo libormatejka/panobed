@@ -1,6 +1,4 @@
 (function () {
-  const API_URL = '/api/chat';
-
   const messagesEl   = document.getElementById('chat-messages');
   const inputEl      = document.getElementById('chat-input');
   const sendBtn      = document.getElementById('chat-send');
@@ -131,30 +129,88 @@
     const controller = new AbortController();
     const timeout    = setTimeout(() => controller.abort(), 120_000);
 
+    let bubble = null;
+    let streamedText = '';
+
     try {
-      const res  = await fetch(API_URL, {
+      const res = await fetch('/api/chat/stream', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify({ message: text, history: conversationHistory, client_id: CLIENT_ID }),
         signal:  controller.signal,
       });
-      const data = await res.json();
-      if (data.history) conversationHistory = data.history;
-      appendMessage('bot', formatReply(data.reply || data.error || 'Něco se pokazilo.'));
-      if (data.response_time_ms) appendMeta(`⏱ ${(data.response_time_ms / 1000).toFixed(1)}s`);
-      if (data.suggestions?.length) {
-        appendQuickReplies(data.suggestions.map(s => ({ label: s, query: s })));
+
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+      const reader  = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buf = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buf += decoder.decode(value, { stream: true });
+        const lines = buf.split('\n');
+        buf = lines.pop();
+
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue;
+          const data = JSON.parse(line.slice(6));
+
+          if (data.type === 'token') {
+            if (!bubble) {
+              const typing = document.getElementById('typing');
+              if (typing) typing.remove();
+              bubble = createBotBubble();
+            }
+            streamedText += data.text;
+            bubble.textContent = streamedText;
+            messagesEl.scrollTop = messagesEl.scrollHeight;
+
+          } else if (data.type === 'done') {
+            if (bubble) bubble.innerHTML = formatReply(data.reply);
+            if (data.history) conversationHistory = data.history;
+            if (data.response_time_ms) appendMeta(`⏱ ${(data.response_time_ms / 1000).toFixed(1)}s`);
+            if (data.suggestions?.length) {
+              appendQuickReplies(data.suggestions.map(s => ({ label: s, query: s })));
+            }
+
+          } else if (data.type === 'error') {
+            if (!bubble) bubble = createBotBubble();
+            bubble.textContent = data.message || 'Něco se pokazilo.';
+          }
+        }
       }
     } catch (err) {
-      if (err.name === 'AbortError') {
-        appendMessage('bot', 'Dotaz trval příliš dlouho. Zkus to prosím znovu.');
-      } else {
-        appendMessage('bot', 'Nepodařilo se spojit se serverem.');
-      }
+      const msg = err.name === 'AbortError'
+        ? 'Dotaz trval příliš dlouho. Zkus to prosím znovu.'
+        : 'Nepodařilo se spojit se serverem.';
+      if (bubble) bubble.textContent = msg;
+      else appendMessage('bot', msg);
     } finally {
       clearTimeout(timeout);
       setLoading(false);
     }
+  }
+
+  function createBotBubble() {
+    const wrap = document.createElement('div');
+    wrap.className = 'message bot';
+
+    const avatar = document.createElement('img');
+    avatar.className = 'bot-avatar';
+    avatar.src = '/assets/chef.png';
+    avatar.alt = 'Pan Oběd';
+    wrap.appendChild(avatar);
+
+    const bubble = document.createElement('div');
+    bubble.className = 'bubble';
+    wrap.appendChild(bubble);
+    messagesEl.appendChild(wrap);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+
+    return bubble;
   }
 
   function appendMeta(text) {

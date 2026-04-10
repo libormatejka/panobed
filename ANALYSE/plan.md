@@ -122,6 +122,27 @@ Uživatel → Chat Widget (HTML/JS)
 | Hosting | Forpsi Cloud VPS, 50–160 Kč/měs |
 | Data | Scraping z menicka.cz, automaticky každý den 7:00 |
 
+## FÁZE 6 – Optimalizace a monitoring
+
+### 6.1 Rychlost odpovědi
+- [ ] Průměrná doba odpovědi ~9s – identifikovat bottleneck (Claude API vs. tool calls vs. síť)
+- [ ] Omezit počet tool call roundtripů (lepší system prompt)
+- [ ] Zvážit streaming odpovědi (`stream: true` v Claude API) pro okamžitou odezvu v UI
+- [ ] Případně snížit `max_tokens` pro běžné dotazy
+
+### 6.2 Optimalizace tokenů
+- [ ] Omezit konverzační historii na posledních N zpráv (např. 6) – aktuálně roste donekonečna
+- [ ] Zkrátit/zjednodušit system prompt
+- [ ] Zkrátit výstup `search_menus` tool – posílá hodně dat pro velká města
+- [ ] Sledovat průměrné náklady na dotaz v `chat_log` (sloupce `input_tokens`, `output_tokens`, `cost_usd`)
+
+### 6.3 Error monitoring
+- [ ] Integrovat Sentry (Node.js SDK) – zachytávat výjimky v backendu
+- [ ] Alert při opakovaných chybách Claude API (timeout, rate limit)
+- [ ] Sledovat chybové odpovědi v `chat_log` (bot_reply obsahuje chybovou zprávu)
+
+---
+
 ## Otevřené otázky (budoucí verze)
 
 1. **Embeddable widget** – zabalit do `<script>` tagu pro embed na jiné weby

@@ -26,6 +26,73 @@ function logUsage(usage, label = '') {
   console.log(`[usage${label}] input=${input} output=${output} cost=$${cost}`);
 }
 
+// Streaming verze – volá onToken(text) pro každý token, onDone(result) na konci
+async function chatStream(userMessage, history = [], clientId = null, onToken, onDone) {
+  const messages = [
+    ...history,
+    { role: 'user', content: userMessage },
+  ];
+
+  let totalInput = 0;
+  let totalOutput = 0;
+  const startTime = Date.now();
+  let collectedText = '';
+
+  while (true) {
+    const stream = client.messages.stream({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 1024,
+      system: SYSTEM_PROMPT,
+      tools: toolDefinitions,
+      messages,
+    });
+
+    stream.on('text', (text) => {
+      collectedText += text;
+      onToken(text);
+    });
+
+    const finalMsg = await stream.finalMessage();
+    totalInput  += finalMsg.usage?.input_tokens  || 0;
+    totalOutput += finalMsg.usage?.output_tokens || 0;
+
+    if (finalMsg.stop_reason === 'end_turn') {
+      const costUsd = totalInput * PRICE_INPUT + totalOutput * PRICE_OUTPUT;
+
+      const suggestionsMatch = collectedText.match(/\[NÁVRHY:\s*(.*?)\]\s*$/s);
+      const suggestions = suggestionsMatch
+        ? suggestionsMatch[1].match(/"([^"]+)"/g)?.map(s => s.replace(/"/g, '')) || []
+        : [];
+      const reply = collectedText.replace(/\[NÁVRHY:.*?\]\s*$/s, '').trimEnd();
+      const responseTimeMs = Date.now() - startTime;
+
+      logChat({ user_message: userMessage, bot_reply: reply, input_tokens: totalInput, output_tokens: totalOutput, cost_usd: costUsd, client_id: clientId, response_time_ms: responseTimeMs });
+
+      const updatedHistory = [...messages, { role: 'assistant', content: reply }];
+      onDone({ reply, history: updatedHistory, suggestions, responseTimeMs });
+      return;
+    }
+
+    if (finalMsg.stop_reason === 'tool_use') {
+      messages.push({ role: 'assistant', content: finalMsg.content });
+
+      const toolResults = [];
+      for (const block of finalMsg.content) {
+        if (block.type !== 'tool_use') continue;
+        console.log(`[tool] ${block.name}`, JSON.stringify(block.input));
+        const result = executeTool(block.name, block.input);
+        toolResults.push({ type: 'tool_result', tool_use_id: block.id, content: result });
+      }
+
+      messages.push({ role: 'user', content: toolResults });
+      collectedText = '';
+      continue;
+    }
+
+    throw new Error(`Neočekávaný stop_reason: ${finalMsg.stop_reason}`);
+  }
+}
+
 // history – pole { role: 'user'|'assistant', content: string }
 // Vrátí { reply, history } kde history obsahuje celou aktualizovanou konverzaci
 async function chat(userMessage, history = [], clientId = null) {
@@ -109,4 +176,4 @@ async function chat(userMessage, history = [], clientId = null) {
   }
 }
 
-module.exports = { chat };
+module.exports = { chat, chatStream };
