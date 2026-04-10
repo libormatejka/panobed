@@ -69,6 +69,7 @@ Cena je uložena v **haléřích** – např. `12900` = 129 Kč.
 | `ADMIN_API_KEY` | Tajný klíč pro Admin API (vygeneruj náhodně) |
 | `PORT` | Port backendu (výchozí: 3000) |
 | `DB_PATH` | Cesta k SQLite souboru uvnitř kontejneru |
+| `SCRAPE_CITIES` | Města pro scraping oddělená čárkou, např. `pardubice,brno` |
 
 ---
 
@@ -84,12 +85,17 @@ Cena je uložena v **haléřích** – např. `12900` = 129 Kč.
 | `make logs` | sleduje logy živě |
 | `make shell` | otevře shell uvnitř backend kontejneru |
 | `make install` | spustí `npm install` (po přidání závislosti) |
-| `make db:reset` | smaže a znovu inicializuje DB (seed data) |
+| `make db:reset` | smaže a znovu inicializuje DB |
+| `make db:truncate` | smaže všechna data, zachová schéma |
 | `make db:menus` | vypíše dnešní menu z DB do terminálu |
 | `make start` | build + up najednou |
-| `make scrape:all` | nascrapuje menu pro všechna města z `SCRAPE_CITIES` v Makefile |
+| `make scrape:all` | nascrapuje menu pro všechna města z `SCRAPE_CITIES` (.env) |
 | `make scrape:city CITY=brno` | nascrapuje konkrétní město |
 | `make scrape:menicka URLS="<url>"` | nascrapuje konkrétní URL z menicka.cz |
+| `make prod-up` | spustí produkční stack |
+| `make prod-down` | zastaví produkční stack |
+| `make prod-logs` | logy produkčního stacku |
+| `make prod-deploy` | git pull + rebuild + restart (update na serveru) |
 
 ---
 
@@ -99,10 +105,10 @@ Scraper stahuje denní menu z [menicka.cz](https://www.menicka.cz) a ukládá je
 
 ### Konfigurace měst
 
-Města pro scraping se nastavují v `Makefile` jako proměnná `SCRAPE_CITIES`:
+Města pro scraping se nastavují v `.env` jako proměnná `SCRAPE_CITIES` (oddělená čárkou):
 
-```makefile
-SCRAPE_CITIES = pardubice hradec-kralove brno
+```
+SCRAPE_CITIES=pardubice,hradec-kralove,brno
 ```
 
 Slug města odpovídá URL na menicka.cz – např. `menicka.cz/hradec-kralove.html` → slug je `hradec-kralove`.

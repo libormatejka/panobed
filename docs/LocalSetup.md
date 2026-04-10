@@ -26,9 +26,9 @@ make start          # build + spuštění kontejnerů
 
 ## 3. Scraping menu
 
-Města pro scraping se konfigurují v `Makefile` (proměnná `SCRAPE_CITIES`):
-```makefile
-SCRAPE_CITIES = pardubice hradec-kralove brno
+Města pro scraping se konfigurují v `.env` (proměnná `SCRAPE_CITIES`):
+```
+SCRAPE_CITIES=pardubice,hradec-kralove,brno
 ```
 Slug = část URL na menicka.cz, např. `menicka.cz/hradec-kralove.html` → `hradec-kralove`.
 
@@ -62,6 +62,7 @@ make shell          # shell uvnitř kontejneru
 
 ```bash
 make db:reset       # smazat a znovu inicializovat DB (pozor – smaže data!)
+make db:truncate    # smazat všechna data, zachovat schéma
 make db:menus       # vypsat dnešní menu z DB do terminálu
 ```
 
