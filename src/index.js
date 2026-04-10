@@ -4,7 +4,7 @@ const cors      = require('cors');
 const path      = require('path');
 const rateLimit = require('express-rate-limit');
 const { chat } = require('./claude');
-const { getPopularQueries, getRestaurantWithMenus } = require('./queries');
+const { getPopularQueries, getRestaurantWithMenus, getCitiesToday } = require('./queries');
 const adminRouter = require('./admin');
 
 const app  = express();
@@ -30,6 +30,10 @@ app.get('/r/:id', (_req, res) => {
 
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok', app: 'Pan Oběd' });
+});
+
+app.get('/api/cities-today', (_req, res) => {
+  res.json(getCitiesToday());
 });
 
 app.get('/api/popular', (_req, res) => {
@@ -86,7 +90,7 @@ app.post('/api/chat', chatLimiter, async (req, res) => {
   }
   try {
     const result = await chat(message.trim(), history || [], client_id ?? null);
-    res.json({ reply: result.reply, history: result.history, suggestions: result.suggestions });
+    res.json({ reply: result.reply, history: result.history, suggestions: result.suggestions, response_time_ms: result.responseTimeMs });
   } catch (err) {
     console.error('[chat error]', err);
     res.status(500).json({ error: 'Chyba při zpracování dotazu.' });

@@ -59,9 +59,36 @@
 
   initWelcome();
   loadPopularQueries();
+  loadCitiesToday();
 
   sendBtn.addEventListener('click', sendMessage);
   inputEl.addEventListener('keydown', e => { if (e.key === 'Enter') sendMessage(); });
+
+  async function loadCitiesToday() {
+    try {
+      const res  = await fetch('/api/cities-today');
+      const data = await res.json();
+      if (!data.length) return;
+
+      const container = document.getElementById('cities-today');
+      const label     = document.getElementById('cities-label');
+      label.style.display = '';
+
+      data.forEach(({ name }) => {
+        const btn = document.createElement('button');
+        btn.className = 'nav-btn';
+        btn.textContent = `🏙️ ${name}`;
+        btn.addEventListener('click', () => {
+          sidebar.classList.remove('open');
+          inputEl.value = `Jaké restaurace dnes nabízí menu v ${name}?`;
+          sendMessage();
+        });
+        container.appendChild(btn);
+      });
+    } catch {
+      // tichá chyba
+    }
+  }
 
   async function loadPopularQueries() {
     try {
@@ -110,6 +137,7 @@
       const data = await res.json();
       if (data.history) conversationHistory = data.history;
       appendMessage('bot', formatReply(data.reply || data.error || 'Něco se pokazilo.'));
+      if (data.response_time_ms) appendMeta(`⏱ ${(data.response_time_ms / 1000).toFixed(1)}s`);
       if (data.suggestions?.length) {
         appendQuickReplies(data.suggestions.map(s => ({ label: s, query: s })));
       }
@@ -118,6 +146,13 @@
     } finally {
       setLoading(false);
     }
+  }
+
+  function appendMeta(text) {
+    const el = document.createElement('div');
+    el.className = 'message-meta';
+    el.textContent = text;
+    messagesEl.appendChild(el);
   }
 
   function appendQuickReplies(options) {

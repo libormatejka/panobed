@@ -139,10 +139,22 @@ function parsePage(html, url) {
 
 // ── Scraping jedné restaurace ─────────────────────────────────────────────────
 
+// Normalizuje název města pro porovnání (bez diakritiky, malá písmena)
+function normalizeCity(str) {
+  return str.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '-');
+}
+
+const ALLOWED_CITIES = new Set(CITIES.map(normalizeCity));
+
 async function scrapeUrl(url) {
   const html = await fetchPage(url);
   const data = parsePage(html, url);
   if (!data.name) return null;
+
+  // Přeskoč restaurace z měst která nejsou v SCRAPE_CITIES
+  if (data.city && !ALLOWED_CITIES.has(normalizeCity(data.city))) {
+    return null;
+  }
 
   const city       = await ensureCity(data.city);
   const restaurant = await ensureRestaurant(data.name, data.address, city.id, url);

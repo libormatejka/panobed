@@ -153,11 +153,21 @@ function deleteMenu(restaurantId, date) {
 
 // ── Chat log ──────────────────────────────────────────────────────────────────
 
-function logChat({ user_message, bot_reply, input_tokens, output_tokens, cost_usd, client_id }) {
+function logChat({ user_message, bot_reply, input_tokens, output_tokens, cost_usd, client_id, response_time_ms }) {
   db.prepare(`
-    INSERT INTO chat_log (user_message, bot_reply, input_tokens, output_tokens, cost_usd, client_id)
-    VALUES (?, ?, ?, ?, ?, ?)
-  `).run(user_message, bot_reply, input_tokens, output_tokens, cost_usd, client_id ?? null);
+    INSERT INTO chat_log (user_message, bot_reply, input_tokens, output_tokens, cost_usd, client_id, response_time_ms)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+  `).run(user_message, bot_reply, input_tokens, output_tokens, cost_usd, client_id ?? null, response_time_ms ?? null);
+}
+
+function getCitiesToday() {
+  return db.prepare(`
+    SELECT DISTINCT c.name, c.slug
+    FROM cities c
+    JOIN restaurants r ON r.city_id = c.id AND r.active = 1
+    JOIN daily_menus dm ON dm.restaurant_id = r.id AND dm.date = date('now')
+    ORDER BY c.name
+  `).all();
 }
 
 function getPopularQueries(limit = 5) {
@@ -176,5 +186,5 @@ module.exports = {
   upsertCity,
   createRestaurant, updateRestaurant, deleteRestaurant,
   upsertDailyMenu, deleteMenu,
-  logChat, getPopularQueries,
+  logChat, getPopularQueries, getCitiesToday,
 };

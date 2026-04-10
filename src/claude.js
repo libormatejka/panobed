@@ -37,6 +37,7 @@ async function chat(userMessage, history = [], clientId = null) {
 
   let totalInput = 0;
   let totalOutput = 0;
+  const startTime = Date.now();
 
   while (true) {
     const response = await client.messages.create({
@@ -64,6 +65,8 @@ async function chat(userMessage, history = [], clientId = null) {
         : [];
       const reply = rawReply.replace(/\[NÁVRHY:.*?\]\s*$/s, '').trimEnd();
 
+      const responseTimeMs = Date.now() - startTime;
+
       logChat({
         user_message: userMessage,
         bot_reply: reply,
@@ -71,6 +74,7 @@ async function chat(userMessage, history = [], clientId = null) {
         output_tokens: totalOutput,
         cost_usd: costUsd,
         client_id: clientId,
+        response_time_ms: responseTimeMs,
       });
 
       // Vrátíme odpověď + aktualizovanou historii (jen text zprávy pro klienta)
@@ -79,7 +83,7 @@ async function chat(userMessage, history = [], clientId = null) {
         { role: 'assistant', content: reply },
       ];
 
-      return { reply, history: updatedHistory, suggestions };
+      return { reply, history: updatedHistory, suggestions, responseTimeMs: responseTimeMs };
     }
 
     if (response.stop_reason === 'tool_use') {

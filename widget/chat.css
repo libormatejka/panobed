@@ -166,6 +166,13 @@ body {
 .restaurant-link:hover { border-bottom-color: #e65c00; }
 .message.user .bubble .restaurant-link { color: #ffd0b0; border-bottom-color: rgba(255,208,176,.4); }
 
+/* Čas generování */
+.message-meta {
+  font-size: 11px;
+  color: #bbb;
+  padding: 0 4px 4px;
+}
+
 /* Quick reply tlačítka */
 .quick-replies {
   display: flex;
