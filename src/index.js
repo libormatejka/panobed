@@ -4,6 +4,7 @@ const cors      = require('cors');
 const path      = require('path');
 const rateLimit = require('express-rate-limit');
 const { chat } = require('./claude');
+const { getPopularQueries } = require('./queries');
 const adminRouter = require('./admin');
 
 const app  = express();
@@ -25,6 +26,10 @@ app.use('/admin', adminRouter);
 
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok', app: 'Pan Oběd' });
+});
+
+app.get('/api/popular', (_req, res) => {
+  res.json(getPopularQueries(5));
 });
 
 app.post('/api/chat', chatLimiter, async (req, res) => {

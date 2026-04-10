@@ -132,11 +132,21 @@ function logChat({ user_message, bot_reply, input_tokens, output_tokens, cost_us
   `).run(user_message, bot_reply, input_tokens, output_tokens, cost_usd);
 }
 
+function getPopularQueries(limit = 5) {
+  return db.prepare(`
+    SELECT user_message, COUNT(*) AS count
+    FROM chat_log
+    GROUP BY user_message
+    ORDER BY count DESC
+    LIMIT ?
+  `).all(limit);
+}
+
 module.exports = {
   listCities, searchMenus, getRestaurantDetail,
   listRestaurants, getMenusForDate,
   upsertCity,
   createRestaurant, updateRestaurant, deleteRestaurant,
   upsertDailyMenu, deleteMenu,
-  logChat,
+  logChat, getPopularQueries,
 };

@@ -72,7 +72,9 @@ function executeTool(name, input) {
         const price = row.price ? `${(row.price / 100).toFixed(0)} Kč` : 'cena neuvedena';
         grouped[row.restaurant_id].items.push(`${row.item} (${price})`);
       }
-      return Object.entries(grouped)
+      const entries = Object.entries(grouped);
+      const summary = `Celkem restaurací: ${entries.length}\n\n`;
+      return summary + entries
         .map(([id, r]) =>
           `[ID:${id}] ${r.name} – ${r.address}${r.phone ? `, tel: ${r.phone}` : ''}\n` +
           r.items.map(i => `  • ${i}`).join('\n')

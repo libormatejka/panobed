@@ -8,26 +8,56 @@
 </head>
 <body>
 
-  <div id="chat-container">
-    <div id="chat-header">
-      <span class="avatar">🍽️</span>
-      <div>
-        <strong>Pan Oběd</strong>
-        <small>Najdu ti oběd v okolí</small>
+  <div id="app">
+
+    <!-- Sidebar -->
+    <aside id="sidebar">
+      <div id="sidebar-logo">
+        <span class="logo-icon">🍽️</span>
+        <div>
+          <strong>Pan Oběd</strong>
+          <small>Průvodce obědem</small>
+        </div>
       </div>
-    </div>
 
-    <div id="chat-messages"></div>
+      <nav id="sidebar-nav">
+        <p class="nav-label">Rychlé dotazy</p>
+        <button class="nav-btn" data-query="Co mají dnes v Pardubicích?">🗓️ Pardubice dnes</button>
+        <button class="nav-btn" data-query="Co mají zítra v Pardubicích?">📅 Pardubice zítra</button>
+        <button class="nav-btn" data-query="Nejlevnější oběd v Pardubicích dnes">💰 Nejlevnější</button>
+        <button class="nav-btn" data-query="Co doporučuješ dnes v Pardubicích?">⭐ Doporučení</button>
 
-    <div id="chat-input-row">
-      <input
-        id="chat-input"
-        type="text"
-        placeholder="Napiš město nebo dotaz…"
-        autocomplete="off"
-      />
-      <button id="chat-send">Odeslat</button>
-    </div>
+        <p class="nav-label" id="popular-label" style="display:none; margin-top:16px;">Nejhledanější</p>
+        <div id="popular-queries"></div>
+      </nav>
+
+      <div id="sidebar-footer">
+        <button id="new-chat-btn">＋ Nová konverzace</button>
+      </div>
+    </aside>
+
+    <!-- Hlavní chat -->
+    <main id="chat-main">
+
+      <header id="chat-header">
+        <button id="sidebar-toggle">☰</button>
+        <span>Pan Oběd</span>
+      </header>
+
+      <div id="chat-messages"></div>
+
+      <div id="chat-input-row">
+        <input
+          id="chat-input"
+          type="text"
+          placeholder="Napiš dotaz, např. Co mají dnes v Pardubicích?"
+          autocomplete="off"
+        />
+        <button id="chat-send">Odeslat</button>
+      </div>
+
+    </main>
+
   </div>
 
   <script src="chat.js"></script>
