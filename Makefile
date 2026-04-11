@@ -90,6 +90,18 @@ prod-deploy:
 	git pull
 	$(COMPOSE_PROD) up -d --build
 
+SERVER = root@194.182.79.4
+
+# ── Produkční server ──────────────────────────────────────────────────────────
+
+# SSH připojení k serveru
+ssh:
+	ssh $(SERVER)
+
+# SSH tunel pro přístup k DB (sqlite-web → http://localhost:8081)
+ssh\:db:
+	ssh -L 8081:localhost:8081 $(SERVER) -N
+
 version\:patch:
 	npm version patch
 
@@ -99,4 +111,4 @@ version\:minor:
 version\:major:
 	npm version major
 
-.PHONY: up down restart build rebuild logs shell install start prod-up prod-down prod-logs prod-deploy version:patch version:minor version:major
+.PHONY: up down restart build rebuild logs shell install start prod-up prod-down prod-logs prod-deploy ssh ssh\:db version\:patch version\:minor version\:major

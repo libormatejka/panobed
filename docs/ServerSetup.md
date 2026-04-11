@@ -8,6 +8,8 @@ Forpsi Cloud VPS, Ubuntu 24.04, OpenStack, Docker šablona
 ## Připojení k serveru
 
 ```bash
+make ssh
+# nebo přímo:
 ssh root@194.182.79.4
 ```
 
@@ -15,6 +17,8 @@ ssh root@194.182.79.4
 
 Spustit lokálně (ne na serveru):
 ```bash
+make ssh:db
+# nebo přímo:
 ssh -L 8081:localhost:8081 root@194.182.79.4 -N
 ```
 Pak otevřít: http://localhost:8081

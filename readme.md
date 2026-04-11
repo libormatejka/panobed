@@ -96,6 +96,8 @@ Cena je uložena v **haléřích** – např. `12900` = 129 Kč.
 | `make prod-down` | zastaví produkční stack |
 | `make prod-logs` | logy produkčního stacku |
 | `make prod-deploy` | git pull + rebuild + restart (update na serveru) |
+| `make ssh` | SSH připojení k produkčnímu serveru |
+| `make ssh:db` | SSH tunel pro přístup k produkční DB (http://localhost:8081) |
 | `make version:patch` | bump verze 0.1.0 → 0.1.1 (bugfix) |
 | `make version:minor` | bump verze 0.1.0 → 0.2.0 (nová funkce) |
 | `make version:major` | bump verze 0.1.0 → 1.0.0 (velká změna) |
