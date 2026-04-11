@@ -7,6 +7,8 @@ services:
       - "3000:3000"
     env_file:
       - ../.env
+    environment:
+      - GIT_COMMIT=${GIT_COMMIT:-unknown}
     volumes:
       # SQLite soubor přežije restart kontejneru
       - db-data:/app/data

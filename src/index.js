@@ -1,8 +1,15 @@
 require('dotenv').config();
-const express   = require('express');
-const cors      = require('cors');
-const path      = require('path');
-const rateLimit = require('express-rate-limit');
+const express        = require('express');
+const cors           = require('cors');
+const path           = require('path');
+const rateLimit      = require('express-rate-limit');
+const { execSync }   = require('child_process');
+
+const APP_VERSION = require('../package.json').version;
+const GIT_COMMIT  = process.env.GIT_COMMIT || (() => {
+  try { return execSync('git rev-parse --short HEAD', { encoding: 'utf8' }).trim(); }
+  catch { return 'unknown'; }
+})();
 const { chat, chatStream } = require('./claude');
 const { getPopularQueries, getRestaurantWithMenus, getCitiesToday } = require('./queries');
 const adminRouter = require('./admin');
@@ -30,7 +37,11 @@ app.get('/r/:id', (_req, res) => {
 });
 
 app.get('/health', (_req, res) => {
-  res.json({ status: 'ok', app: 'Pan Oběd' });
+  res.json({ status: 'ok', app: 'Pan Oběd', version: APP_VERSION, commit: GIT_COMMIT });
+});
+
+app.get('/api/version', (_req, res) => {
+  res.json({ version: APP_VERSION, commit: GIT_COMMIT });
 });
 
 app.get('/api/cities-today', (_req, res) => {

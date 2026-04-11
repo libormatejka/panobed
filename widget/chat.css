@@ -117,6 +117,13 @@ body {
 
 #new-chat-btn:hover { background: #cf5200; }
 
+#app-version {
+  margin-top: 8px;
+  font-size: 11px;
+  color: #b0b0c0;
+  text-align: center;
+}
+
 /* ── Chat hlavní ────────────────────────────────────────────────────────────── */
 
 #chat-main {

@@ -58,9 +58,21 @@
   initWelcome();
   loadPopularQueries();
   loadCitiesToday();
+  loadVersion();
 
   sendBtn.addEventListener('click', sendMessage);
   inputEl.addEventListener('keydown', e => { if (e.key === 'Enter') sendMessage(); });
+
+  async function loadVersion() {
+    try {
+      const res  = await fetch('/api/version');
+      const data = await res.json();
+      const el   = document.getElementById('app-version');
+      if (el) el.textContent = `v${data.version} · ${data.commit}`;
+    } catch {
+      // tichá chyba
+    }
+  }
 
   async function loadCitiesToday() {
     try {

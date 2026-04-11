@@ -1,6 +1,8 @@
 COMPOSE      = docker compose --project-name panobed -f .docker/docker-compose.yml
 COMPOSE_PROD = docker compose --project-name panobed -f .docker/docker-compose.yml -f .docker/docker-compose.prod.yml
 
+export GIT_COMMIT := $(shell git rev-parse --short HEAD 2>/dev/null || echo unknown)
+
 # Konfigurace měst je v .env (SCRAPE_CITIES=pardubice,brno,...)
 
 # ── Základní operace ──────────────────────────────────────────────────────────
@@ -88,4 +90,13 @@ prod-deploy:
 	git pull
 	$(COMPOSE_PROD) up -d --build
 
-.PHONY: up down restart build rebuild logs shell install start prod-up prod-down prod-logs prod-deploy
+version\:patch:
+	npm version patch
+
+version\:minor:
+	npm version minor
+
+version\:major:
+	npm version major
+
+.PHONY: up down restart build rebuild logs shell install start prod-up prod-down prod-logs prod-deploy version:patch version:minor version:major

@@ -81,6 +81,22 @@ make rebuild && make up
 
 ---
 
+---
+
+## Verzování
+
+Verze aplikace je vidět v sidebaru (`v0.1.0 · abc1234`). Bump přes:
+
+```bash
+make version:patch   # bugfix:  0.1.0 → 0.1.1
+make version:minor   # funkce:  0.1.0 → 0.2.0
+make version:major   # velká:   0.1.0 → 1.0.0
+```
+
+Aktuální verzi ověříš na: http://localhost:3000/api/version
+
+---
+
 ## Nasazení na produkci (server)
 
 Viz [ServerSetup.md](ServerSetup.md)

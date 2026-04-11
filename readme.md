@@ -96,6 +96,9 @@ Cena je uložena v **haléřích** – např. `12900` = 129 Kč.
 | `make prod-down` | zastaví produkční stack |
 | `make prod-logs` | logy produkčního stacku |
 | `make prod-deploy` | git pull + rebuild + restart (update na serveru) |
+| `make version:patch` | bump verze 0.1.0 → 0.1.1 (bugfix) |
+| `make version:minor` | bump verze 0.1.0 → 0.2.0 (nová funkce) |
+| `make version:major` | bump verze 0.1.0 → 1.0.0 (velká změna) |
 
 ---
 
@@ -187,6 +190,25 @@ panobed/
 ├── .env.example
 ├── Makefile
 └── package.json
+```
+
+---
+
+## Verzování
+
+Aktuální verze je vidět v levém dolním rohu sidebaru ve formátu `v0.1.0 · abc1234` (verze · git commit hash).
+
+Verzi bumpeš příkazem:
+
+```bash
+make version:patch   # 0.1.0 → 0.1.1  (bugfixy)
+make version:minor   # 0.1.0 → 0.2.0  (nové funkce)
+make version:major   # 0.1.0 → 1.0.0  (velká změna)
+```
+
+Příkaz automaticky změní `package.json` a vytvoří git commit s tagem. Po nasazení na server zkontroluj verzi na:
+```
+https://panobed.cz/api/version
 ```
 
 ---

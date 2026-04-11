@@ -144,7 +144,13 @@ function normalizeCity(str) {
   return str.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '-');
 }
 
-const ALLOWED_CITIES = new Set(CITIES.map(normalizeCity));
+const ALLOWED_CITIES = CITIES.map(normalizeCity);
+
+// Praha 1, Praha 2 … musí matchovat na "praha"
+function cityAllowed(city) {
+  const n = normalizeCity(city);
+  return ALLOWED_CITIES.some(a => n === a || n.startsWith(a + '-'));
+}
 
 async function scrapeUrl(url) {
   const html = await fetchPage(url);
@@ -152,7 +158,7 @@ async function scrapeUrl(url) {
   if (!data.name) return null;
 
   // Přeskoč restaurace z měst která nejsou v SCRAPE_CITIES
-  if (data.city && !ALLOWED_CITIES.has(normalizeCity(data.city))) {
+  if (data.city && !cityAllowed(data.city)) {
     return null;
   }
 
