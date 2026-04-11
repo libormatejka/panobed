@@ -19,8 +19,8 @@ const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname, '../widget')));
 app.use('/assets', express.static(path.join(__dirname, '../assets')));
+app.use(express.static(path.join(__dirname, '../widget'), { index: false }));
 
 const chatLimiter = rateLimit({
   windowMs: 60 * 1000,   // 1 minuta
@@ -32,9 +32,18 @@ const chatLimiter = rateLimit({
 
 app.use('/admin', adminRouter);
 
-app.get('/r/:id', (_req, res) => {
-  res.sendFile(path.join(__dirname, '../widget/restaurant.html'));
-});
+function sendHtml(file, res) {
+  const fs   = require('fs');
+  const html = fs.readFileSync(path.join(__dirname, '../widget', file), 'utf8')
+    .replace(/(chat\.css|chat\.js|restaurant\.js)"/g, `$1?v=${GIT_COMMIT}"`);
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.setHeader('Content-Type', 'text/html');
+  res.send(html);
+}
+
+app.get('/', (_req, res) => sendHtml('index.html', res));
+
+app.get('/r/:id', (_req, res) => sendHtml('restaurant.html', res));
 
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok', app: 'Pan Oběd', version: APP_VERSION, commit: GIT_COMMIT });
