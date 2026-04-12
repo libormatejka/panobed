@@ -67,8 +67,10 @@
     try {
       const res  = await fetch('/api/version');
       const data = await res.json();
-      const el   = document.getElementById('app-version');
+      const el = document.getElementById('app-version');
       if (el) el.textContent = `v${data.version} · ${data.commit}`;
+      const elHeader = document.getElementById('header-version');
+      if (elHeader) elHeader.textContent = `v${data.version} · ${data.commit}`;
     } catch {
       // tichá chyba
     }

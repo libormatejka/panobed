@@ -4,6 +4,7 @@ body {
   font-family: system-ui, -apple-system, sans-serif;
   background: #eceef8;
   height: 100vh;
+  height: 100dvh;
   overflow: hidden;
   display: flex;
   align-items: center;
@@ -27,6 +28,7 @@ body {
   overflow: hidden;
   box-shadow: 0 8px 40px rgba(0,0,0,.12);
   background: #fff;
+  min-height: 0;
 }
 
 /* ── Sidebar ────────────────────────────────────────────────────────────────── */
@@ -122,6 +124,17 @@ body {
   font-size: 11px;
   color: #b0b0c0;
   text-align: center;
+}
+
+#header-version {
+  font-size: 11px;
+  color: #ccc;
+  margin-left: auto;
+  display: none;
+}
+
+@media (max-width: 640px) {
+  #header-version { display: block; }
 }
 
 /* ── Chat hlavní ────────────────────────────────────────────────────────────── */
@@ -314,8 +327,15 @@ body {
 /* ── Mobilní layout ─────────────────────────────────────────────────────────── */
 
 @media (max-width: 640px) {
-  #app-wrap { padding: 0; }
-  #app { border-radius: 0; }
+  #app-wrap {
+    padding: 0;
+    height: 100vh;
+    height: 100dvh;
+  }
+  #app {
+    border-radius: 0;
+    height: 100%;
+  }
 
   #sidebar {
     position: fixed;
