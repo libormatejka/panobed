@@ -1,11 +1,10 @@
-# Produkční přepsání – porty dostupné jen z localhostu (přes Caddy)
-# Použití: docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+# Produkční přepsání
+# Porty 3000 a 8081 jsou chráněny UFW firewallem (deny zvenku).
+# Docker Compose merge přidává port bindings, proto zde žádné port overrides nejsou.
+# Přístup k sqlite-web přes SSH tunel: ssh -L 8081:localhost:8081 user@server
 services:
   backend:
-    ports:
-      - "127.0.0.1:3000:3000"
+    restart: always
 
   sqlite-web:
-    # sqlite-web dostupný jen přes SSH tunel: ssh -L 8081:localhost:8081 user@server
-    ports:
-      - "127.0.0.1:8081:8080"
+    restart: always
