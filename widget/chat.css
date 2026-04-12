@@ -128,13 +128,9 @@ body {
 
 #header-version {
   font-size: 11px;
-  color: #ccc;
+  color: #aaa;
   margin-left: auto;
   display: none;
-}
-
-@media (max-width: 640px) {
-  #header-version { display: block; }
 }
 
 /* ── Chat hlavní ────────────────────────────────────────────────────────────── */
@@ -341,6 +337,7 @@ body {
     position: fixed;
     top: 0; left: 0;
     height: 100vh;
+    height: 100dvh;
     z-index: 100;
     transform: translateX(-100%);
     box-shadow: 4px 0 20px rgba(0,0,0,.15);
@@ -349,6 +346,8 @@ body {
   #sidebar.open { transform: translateX(0); }
 
   #sidebar-toggle { display: block; }
+
+  #header-version { display: block; }
 
   .bubble { max-width: 85%; }
 }
