@@ -89,6 +89,7 @@ prod-logs:
 prod-deploy:
 	git pull
 	$(COMPOSE_PROD) down
+	sleep 3
 	$(COMPOSE_PROD) up -d --build
 
 SERVER = root@194.182.79.4
