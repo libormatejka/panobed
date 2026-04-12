@@ -143,7 +143,7 @@
     const controller = new AbortController();
     const timeout    = setTimeout(() => controller.abort(), 120_000);
 
-    let bubble = null;
+    let bubble = null, textEl = null, overlay = null;
     let streamedText = '';
 
     try {
@@ -176,19 +176,20 @@
             if (!bubble) {
               const typing = document.getElementById('typing');
               if (typing) typing.remove();
-              bubble = createBotBubble();
+              ({ bubble, textEl, overlay } = createBotBubble());
             }
             streamedText += data.text;
-            bubble.textContent = streamedText;
+            textEl.textContent = streamedText;
             messagesEl.scrollTop = messagesEl.scrollHeight;
 
           } else if (data.type === 'done') {
-            if (bubble) {
-              bubble.style.opacity = '0';
+            if (overlay) {
+              overlay.classList.add('fade-out');
               setTimeout(() => {
                 bubble.innerHTML = formatReply(data.reply);
-                bubble.style.opacity = '';
-              }, 150);
+              }, 350);
+            } else if (bubble) {
+              bubble.innerHTML = formatReply(data.reply);
             }
             if (data.history) conversationHistory = data.history;
             if (data.response_time_ms) appendMeta(`⏱ ${(data.response_time_ms / 1000).toFixed(1)}s`);
@@ -197,7 +198,8 @@
             }
 
           } else if (data.type === 'error') {
-            if (!bubble) bubble = createBotBubble();
+            if (!bubble) ({ bubble, textEl, overlay } = createBotBubble());
+            if (overlay) overlay.remove();
             bubble.textContent = data.message || 'Něco se pokazilo.';
           }
         }
@@ -206,7 +208,7 @@
       const msg = err.name === 'AbortError'
         ? 'Dotaz trval příliš dlouho. Zkus to prosím znovu.'
         : 'Nepodařilo se spojit se serverem.';
-      if (bubble) bubble.textContent = msg;
+      if (bubble) { if (overlay) overlay.remove(); bubble.textContent = msg; }
       else appendMessage('bot', msg);
     } finally {
       clearTimeout(timeout);
@@ -226,11 +228,21 @@
 
     const bubble = document.createElement('div');
     bubble.className = 'bubble';
+
+    const textEl = document.createElement('div');
+    textEl.className = 'bubble-text';
+    bubble.appendChild(textEl);
+
+    const overlay = document.createElement('div');
+    overlay.className = 'generating-overlay';
+    overlay.innerHTML = '<span class="generating-label">Generuji menu, vydrž chvíli&hellip;</span>';
+    bubble.appendChild(overlay);
+
     wrap.appendChild(bubble);
     messagesEl.appendChild(wrap);
     messagesEl.scrollTop = messagesEl.scrollHeight;
 
-    return bubble;
+    return { bubble, textEl, overlay };
   }
 
   function appendMeta(text) {
