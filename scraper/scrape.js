@@ -45,7 +45,9 @@ async function apiPost(path, body) {
     headers: reqHeaders,
     body: JSON.stringify(body),
   });
-  return res.json();
+  const data = await res.json();
+  if (!res.ok) throw new Error(`API ${path} → ${res.status}: ${JSON.stringify(data)}`);
+  return data;
 }
 
 // ── Cache (načte se jednou, eliminuje N+1) ────────────────────────────────────
@@ -158,7 +160,11 @@ async function scrapeUrl(url) {
   if (!data.name) return null;
 
   // Přeskoč restaurace z měst která nejsou v SCRAPE_CITIES
-  if (data.city && !cityAllowed(data.city)) {
+  if (!data.city) {
+    console.error(`  ⚠ Prázdné město pro ${url} (adresa: ${data.address})`);
+    return null;
+  }
+  if (!cityAllowed(data.city)) {
     return null;
   }
 
