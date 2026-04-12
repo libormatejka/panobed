@@ -88,6 +88,7 @@ prod-logs:
 # Pull + rebuild + restart (pro update na serveru)
 prod-deploy:
 	git pull
+	$(COMPOSE_PROD) down
 	$(COMPOSE_PROD) up -d --build
 
 SERVER = root@194.182.79.4
