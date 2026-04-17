@@ -18,7 +18,7 @@ const app  = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '2mb' }));
 app.use('/assets', express.static(path.join(__dirname, '../assets')));
 app.use(express.static(path.join(__dirname, '../widget'), { index: false }));
 
@@ -104,11 +104,14 @@ app.get('/api/restaurant/:id', (req, res) => {
   res.json(r);
 });
 
+const MAX_HISTORY = 20;
+
 app.post('/api/chat/stream', chatLimiter, async (req, res) => {
   const { message, history, client_id } = req.body;
   if (!message || typeof message !== 'string' || message.trim() === '') {
     return res.status(400).json({ error: 'Pole message je povinné.' });
   }
+  const trimmedHistory = Array.isArray(history) ? history.slice(-MAX_HISTORY) : [];
 
   res.setHeader('Content-Type', 'text/event-stream');
   res.setHeader('Cache-Control', 'no-cache');
@@ -120,7 +123,7 @@ app.post('/api/chat/stream', chatLimiter, async (req, res) => {
   try {
     await chatStream(
       message.trim(),
-      history || [],
+      trimmedHistory,
       client_id ?? null,
       (text) => send({ type: 'token', text }),
       (result) => send({ type: 'done', ...result }),
