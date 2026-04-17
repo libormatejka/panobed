@@ -37,11 +37,11 @@ router.get('/restaurants', (req, res) => {
 });
 
 router.post('/restaurants', (req, res) => {
-  const { name, address, city_id, phone, website } = req.body;
+  const { name, address, city_id, phone, website, district } = req.body;
   if (!name || !address || !city_id) {
     return res.status(400).json({ error: 'Povinná pole: name, address, city_id' });
   }
-  const restaurant = createRestaurant({ name, address, city_id, phone, website });
+  const restaurant = createRestaurant({ name, address, city_id, phone, website, district });
   res.status(201).json(restaurant);
 });
 

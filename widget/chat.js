@@ -86,7 +86,7 @@
       const label     = document.getElementById('cities-label');
       label.style.display = '';
 
-      data.forEach(({ name }) => {
+      data.forEach(({ name, districts }) => {
         const btn = document.createElement('button');
         btn.className = 'nav-btn';
         btn.textContent = `🏙️ ${name}`;
@@ -96,6 +96,23 @@
           sendMessage();
         });
         container.appendChild(btn);
+
+        if (districts && districts.length > 0) {
+          const districtWrap = document.createElement('div');
+          districtWrap.className = 'district-list';
+          districts.forEach(d => {
+            const db = document.createElement('button');
+            db.className = 'nav-btn nav-btn-district';
+            db.textContent = d;
+            db.addEventListener('click', () => {
+              sidebar.classList.remove('open');
+              inputEl.value = `Jaké restaurace dnes nabízí menu v ${d}?`;
+              sendMessage();
+            });
+            districtWrap.appendChild(db);
+          });
+          container.appendChild(districtWrap);
+        }
       });
     } catch {
       // tichá chyba

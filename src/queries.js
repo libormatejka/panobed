@@ -6,22 +6,28 @@ function listCities() {
   return db.prepare(`SELECT id, name, slug FROM cities ORDER BY name`).all();
 }
 
-function searchMenus(city, date) {
+function searchMenus(city, date, district = null) {
+  const districtFilter = district ? `AND lower(r.district) = lower(?)` : '';
+  const params = district
+    ? [date, city.toLowerCase(), city, district]
+    : [date, city.toLowerCase(), city];
   return db.prepare(`
     SELECT
-      r.id   AS restaurant_id,
-      r.name AS restaurant,
+      r.id       AS restaurant_id,
+      r.name     AS restaurant,
       r.address,
       r.phone,
-      mi.name  AS item,
+      r.district,
+      mi.name    AS item,
       mi.price
     FROM cities c
     JOIN restaurants r  ON r.city_id = c.id AND r.active = 1
     JOIN daily_menus dm ON dm.restaurant_id = r.id AND dm.date = ?
     JOIN menu_items  mi ON mi.daily_menu_id = dm.id
-    WHERE c.slug = ? OR lower(c.name) = lower(?)
+    WHERE (c.slug = ? OR lower(c.name) = lower(?))
+    ${districtFilter}
     ORDER BY r.name, mi.id
-  `).all(date, city.toLowerCase(), city);
+  `).all(...params);
 }
 
 function getRestaurantDetail(restaurantId) {
@@ -93,12 +99,12 @@ function upsertCity(name, slug) {
 
 // ── Write – restaurants ───────────────────────────────────────────────────────
 
-function createRestaurant({ name, address, city_id, phone, website }) {
+function createRestaurant({ name, address, city_id, phone, website, district }) {
   return db.prepare(`
-    INSERT INTO restaurants (name, address, city_id, phone, website)
-    VALUES (?, ?, ?, ?, ?)
+    INSERT INTO restaurants (name, address, city_id, phone, website, district)
+    VALUES (?, ?, ?, ?, ?, ?)
     RETURNING *
-  `).get(name, address, city_id, phone ?? null, website ?? null);
+  `).get(name, address, city_id, phone ?? null, website ?? null, district ?? null);
 }
 
 function updateRestaurant(id, fields) {
@@ -161,13 +167,30 @@ function logChat({ user_message, bot_reply, input_tokens, output_tokens, cost_us
 }
 
 function getCitiesToday() {
-  return db.prepare(`
+  const cities = db.prepare(`
     SELECT DISTINCT c.name, c.slug
     FROM cities c
     JOIN restaurants r ON r.city_id = c.id AND r.active = 1
     JOIN daily_menus dm ON dm.restaurant_id = r.id AND dm.date = date('now')
     ORDER BY c.name
   `).all();
+
+  const districts = db.prepare(`
+    SELECT DISTINCT c.name AS city, r.district
+    FROM cities c
+    JOIN restaurants r ON r.city_id = c.id AND r.active = 1
+    JOIN daily_menus dm ON dm.restaurant_id = r.id AND dm.date = date('now')
+    WHERE r.district IS NOT NULL
+    ORDER BY r.district
+  `).all();
+
+  const districtMap = {};
+  for (const row of districts) {
+    if (!districtMap[row.city]) districtMap[row.city] = [];
+    districtMap[row.city].push(row.district);
+  }
+
+  return cities.map(c => ({ ...c, districts: districtMap[c.name] || [] }));
 }
 
 function getPopularQueries(limit = 5) {

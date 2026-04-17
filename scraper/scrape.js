@@ -9,9 +9,16 @@ const iconv   = require('iconv-lite');
 
 const API_BASE   = process.env.SCRAPER_API_URL || 'http://localhost:3000';
 const ADMIN_KEY  = process.env.ADMIN_API_KEY;
-const CITIES     = (process.env.SCRAPE_CITIES || 'pardubice')
+const CITIES_RAW = (process.env.SCRAPE_CITIES || 'pardubice')
   .split(',').map(s => s.trim()).filter(Boolean);
 const BATCH_SIZE = 5;
+
+// Automatická expanze měst s obvody (Praha → Praha 1–10)
+const DISTRICT_EXPANSIONS = {
+  praha: ['praha', 'praha-2', 'praha-3', 'praha-4', 'praha-5',
+          'praha-6', 'praha-7', 'praha-8', 'praha-9', 'praha-10'],
+};
+const CITIES = CITIES_RAW.flatMap(c => DISTRICT_EXPANSIONS[c] || [c]);
 
 if (!ADMIN_KEY) {
   console.error('Chybí ADMIN_API_KEY v .env');
@@ -76,11 +83,22 @@ async function ensureCity(name) {
   return city;
 }
 
-async function ensureRestaurant(name, address, cityId, url) {
+async function ensureRestaurant(name, address, cityId, url, district) {
   if (restaurantCache.has(name)) return restaurantCache.get(name);
-  const r = await apiPost('/admin/restaurants', { name, address, city_id: cityId, website: url });
+  const r = await apiPost('/admin/restaurants', { name, address, city_id: cityId, website: url, district: district || null });
   restaurantCache.set(name, r);
   return r;
+}
+
+// Praha 4 → Praha, Brno → Brno
+function getParentCity(cityName) {
+  const m = cityName.match(/^(Praha)[\s\d-]/i);
+  return m ? m[1] : cityName;
+}
+
+// Praha 4 → "Praha 4", Brno → null
+function getDistrict(cityName) {
+  return /^Praha[\s-]\S/i.test(cityName) ? cityName : null;
 }
 
 // ── Parsování stránky menicka.cz ──────────────────────────────────────────────
@@ -168,8 +186,10 @@ async function scrapeUrl(url) {
     return null;
   }
 
-  const city       = await ensureCity(data.city);
-  const restaurant = await ensureRestaurant(data.name, data.address, city.id, url);
+  const parentCity = getParentCity(data.city);
+  const district   = getDistrict(data.city);
+  const city       = await ensureCity(parentCity);
+  const restaurant = await ensureRestaurant(data.name, data.address, city.id, url, district);
 
   for (const day of data.days) {
     await apiPost('/admin/menus', {
@@ -226,7 +246,8 @@ async function scrapeCity(citySlug) {
 async function main() {
   const start = Date.now();
   console.log(`Pan Oběd scraper`);
-  console.log(`Města: ${CITIES.join(', ')}`);
+  console.log(`Konfigurace: ${CITIES_RAW.join(', ')}`);
+  console.log(`Stránky ke scrapování: ${CITIES.join(', ')}`);
   console.log(`Souběžnost: ${BATCH_SIZE} restaurací najednou\n`);
 
   await loadCache();

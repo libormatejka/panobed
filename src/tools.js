@@ -19,11 +19,15 @@ const toolDefinitions = [
       properties: {
         city: {
           type: 'string',
-          description: 'Název města, např. "Pardubice"',
+          description: 'Název města, např. "Praha" nebo "Pardubice"',
         },
         date: {
           type: 'string',
           description: 'Datum ve formátu YYYY-MM-DD, pro které chceme menu',
+        },
+        district: {
+          type: 'string',
+          description: 'Konkrétní část/obvod města, např. "Praha 4". Použij pokud uživatel specifikuje obvod.',
         },
       },
       required: ['city', 'date'],
@@ -54,7 +58,7 @@ function executeTool(name, input) {
       return `Dostupná města: ${cities.map(c => c.name).join(', ')}`;
     }
     case 'search_menus': {
-      const rows = searchMenus(input.city, input.date);
+      const rows = searchMenus(input.city, input.date, input.district ?? null);
       if (rows.length === 0) {
         return `Pro město "${input.city}" na datum ${input.date} nejsou dostupná žádná menu.`;
       }
