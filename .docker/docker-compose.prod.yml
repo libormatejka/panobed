@@ -5,7 +5,6 @@
 services:
   backend:
     restart: always
-    command: sh -c "node src/index.js 2>&1 | stdbuf -oL tee -a /app/data/app.log"
 
   sqlite-web:
     restart: always
