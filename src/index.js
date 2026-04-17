@@ -23,6 +23,18 @@ app.use(express.json({ limit: '2mb' }));
 app.use('/assets', express.static(path.join(__dirname, '../assets')));
 app.use(express.static(path.join(__dirname, '../widget'), { index: false }));
 
+const SKIP_LOG = new Set(['/health', '/api/version', '/api/cities-today', '/api/popular']);
+app.use((req, _res, next) => {
+  if (!SKIP_LOG.has(req.path) && !req.path.startsWith('/assets')) {
+    const ip  = req.ip ?? req.socket?.remoteAddress ?? '-';
+    const msg = req.method === 'POST' && req.body?.message
+      ? ` "${req.body.message.slice(0, 120)}"`
+      : '';
+    console.log(`[req] ${req.method} ${req.path} ip=${ip}${msg}`);
+  }
+  next();
+});
+
 const chatLimiter = rateLimit({
   windowMs: 60 * 1000,   // 1 minuta
   max: 20,               // max 20 dotazů za minutu z jedné IP
