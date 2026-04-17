@@ -85,6 +85,9 @@ prod-down:
 prod-logs:
 	$(COMPOSE_PROD) logs -f
 
+prod-logs\:tail:
+	$(COMPOSE_PROD) logs --tail=200
+
 # Pull + rebuild + restart (pro update na serveru)
 prod-deploy:
 	git pull
@@ -113,4 +116,4 @@ version\:minor:
 version\:major:
 	npm version major
 
-.PHONY: up down restart build rebuild logs shell install start prod-up prod-down prod-logs prod-deploy ssh ssh\:db version\:patch version\:minor version\:major
+.PHONY: up down restart build rebuild logs shell install start prod-up prod-down prod-logs prod-logs\:tail prod-deploy ssh ssh\:db version\:patch version\:minor version\:major
