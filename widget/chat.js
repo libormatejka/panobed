@@ -222,9 +222,15 @@
         }
       }
     } catch (err) {
-      const msg = err.name === 'AbortError'
-        ? 'Dotaz trval příliš dlouho. Zkus to prosím znovu.'
-        : 'Nepodařilo se spojit se serverem.';
+      let msg;
+      if (err.name === 'AbortError') {
+        msg = 'Dotaz trval příliš dlouho. Zkus to prosím znovu.';
+      } else if (!navigator.onLine) {
+        msg = 'Nejsi připojen k internetu.';
+      } else {
+        msg = 'Nepodařilo se spojit se serverem. Zkus to prosím znovu.';
+        console.warn('[chat error]', err.name, err.message);
+      }
       if (bubble) { if (overlay) overlay.remove(); bubble.textContent = msg; }
       else appendMessage('bot', msg);
     } finally {

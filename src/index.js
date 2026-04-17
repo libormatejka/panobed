@@ -129,8 +129,20 @@ app.post('/api/chat/stream', chatLimiter, async (req, res) => {
       (result) => send({ type: 'done', ...result }),
     );
   } catch (err) {
-    console.error('[chat/stream error]', err);
-    send({ type: 'error', message: 'Chyba při zpracování dotazu.' });
+    const status = err.status ?? err.statusCode ?? null;
+    const errName = err.constructor?.name ?? err.name ?? 'Error';
+    console.error(`[chat/stream error] ${errName} status=${status} msg=${err.message}`);
+    let userMessage = 'Chyba při zpracování dotazu. Zkus to prosím znovu.';
+    if (status === 429 || errName === 'RateLimitError') {
+      userMessage = 'Claude AI je momentálně přetížen. Zkus to za chvíli.';
+    } else if (status === 529 || errName === 'OverloadedError') {
+      userMessage = 'Claude AI je momentálně přetížen. Zkus to za chvíli.';
+    } else if (errName === 'APITimeoutError' || err.code === 'ETIMEDOUT' || err.code === 'ECONNRESET') {
+      userMessage = 'Dotaz trval příliš dlouho. Zkus to prosím znovu.';
+    } else if (status >= 500) {
+      userMessage = 'Chyba na straně AI. Zkus to prosím za chvíli.';
+    }
+    send({ type: 'error', message: userMessage });
   } finally {
     res.end();
   }

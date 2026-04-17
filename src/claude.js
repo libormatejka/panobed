@@ -90,7 +90,9 @@ async function chatStream(userMessage, history = [], clientId = null, onToken, o
       continue;
     }
 
-    throw new Error(`Neočekávaný stop_reason: ${finalMsg.stop_reason}`);
+    const reason = finalMsg.stop_reason ?? 'unknown';
+    console.error(`[chatStream] unexpected stop_reason: ${reason}`);
+    throw new Error(`Neočekávaný stop_reason: ${reason}`);
   }
 }
 
