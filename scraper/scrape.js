@@ -125,7 +125,7 @@ function parsePage(html, url) {
     if (!date) return;
 
     const items = [];
-    $(el).find('li.polevka, li.jidlo').each((_, li) => {
+    $(el).find('li, span.popup-gallery li').filter((_, li) => $(li).find('div.polozka').length > 0).each((_, li) => {
       const itemName = $(li).find('div.polozka').clone()
         .find('span.poradi').remove().end()
         .text().trim();
