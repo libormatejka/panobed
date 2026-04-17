@@ -17,6 +17,7 @@ const adminRouter = require('./admin');
 const app  = express();
 const PORT = process.env.PORT || 3000;
 
+app.set('trust proxy', 1);  // nginx reverse proxy
 app.use(cors());
 app.use(express.json({ limit: '2mb' }));
 app.use('/assets', express.static(path.join(__dirname, '../assets')));
