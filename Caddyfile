@@ -1,6 +1,21 @@
 # Nahraď panobed.vas-domena.cz svojí doménou
-panobed.vas-domena.cz {
+panobed.cz {
     reverse_proxy localhost:3000 {
         flush_interval -1
+        transport http {
+            response_header_timeout 120s
+        }
     }
+}
+
+www.panobed.cz {
+    redir https://panobed.cz{uri} permanent
+}
+
+db.panobed.cz {
+    basicauth {
+        admin $2a$14$PEK9lym78aD3d.StGoFHLe9Lzpz6/Ao5AbQYoGgpoQtjiWvt.769a
+    }
+    reverse_proxy localhost:8081
+    header Content-Security-Policy "upgrade-insecure-requests"
 }

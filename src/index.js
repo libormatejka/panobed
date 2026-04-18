@@ -134,12 +134,15 @@ app.post('/api/chat/stream', chatLimiter, async (req, res) => {
 
   const send = (data) => res.write(`data: ${JSON.stringify(data)}\n\n`);
 
+  // Keepalive ping každé 2s – zabrání Caddy/nginx bufferování a browser timeoutům
+  const keepalive = setInterval(() => res.write(': ping\n\n'), 2000);
+
   try {
     await chatStream(
       message.trim(),
       trimmedHistory,
       client_id ?? null,
-      (text) => send({ type: 'token', text }),
+      (text) => { clearInterval(keepalive); send({ type: 'token', text }); },
       (result) => send({ type: 'done', ...result }),
     );
   } catch (err) {
@@ -158,6 +161,7 @@ app.post('/api/chat/stream', chatLimiter, async (req, res) => {
     }
     send({ type: 'error', message: userMessage });
   } finally {
+    clearInterval(keepalive);
     res.end();
   }
 });
