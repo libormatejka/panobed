@@ -71,6 +71,8 @@ async function chatStream(userMessage, history = [], clientId = null, onToken, o
       const responseTimeMs = Date.now() - startTime;
 
       logChat({ user_message: userMessage, bot_reply: reply, input_tokens: totalInput, output_tokens: totalOutput, cost_usd: costUsd, client_id: clientId, response_time_ms: responseTimeMs });
+      const replyPreview = reply.slice(0, 300) + (reply.length > 300 ? '…' : '');
+      console.log(`[chat:done] ${responseTimeMs}ms in=${totalInput} out=${totalOutput} cost=$${costUsd.toFixed(6)} reply="${replyPreview}"`);
 
       const updatedHistory = [...messages, { role: 'assistant', content: reply }];
       onDone({ reply, history: updatedHistory, suggestions, responseTimeMs });
@@ -83,8 +85,11 @@ async function chatStream(userMessage, history = [], clientId = null, onToken, o
       const toolResults = [];
       for (const block of finalMsg.content) {
         if (block.type !== 'tool_use') continue;
-        console.log(`[tool] ${block.name}`, JSON.stringify(block.input));
         const result = executeTool(block.name, block.input);
+        const resultPreview = typeof result === 'string'
+          ? result.slice(0, 200) + (result.length > 200 ? '…' : '')
+          : JSON.stringify(result).slice(0, 200);
+        console.log(`[tool] ${block.name} input=${JSON.stringify(block.input)} result="${resultPreview}"`);
         toolResults.push({ type: 'tool_result', tool_use_id: block.id, content: result });
       }
 
