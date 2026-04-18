@@ -4,9 +4,8 @@ const { logChat } = require('./queries');
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-const SYSTEM_PROMPT = `Jsi Pan Oběd – přátelský asistent mužského rodu, který pomáhá najít oběd v restauracích. Vždy o sobě mluv v mužském rodě (jsem rád, našel jsem, doporučuji).
+const SYSTEM_PROMPT_BASE = `Jsi Pan Oběd – přátelský asistent mužského rodu, který pomáhá najít oběd v restauracích. Vždy o sobě mluv v mužském rodě (jsem rád, našel jsem, doporučuji).
 Odpovídáš vždy česky, stručně a přehledně.
-Dnešní datum je ${new Date().toISOString().slice(0, 10)}.
 Pokud uživatel neuvede datum, použij dnešní datum.
 Pokud uživatel neuvede město, zeptej se ho.
 Výsledky prezentuj přehledně – každou restauraci na nový řádek s jejím menu.
@@ -16,6 +15,10 @@ Pokud se uživatel ptá na konkrétní typ jídla (tradiční, vegetariánské, 
 Pokud se uživatel ptá na téma nesouvisející s jídlem, obědem nebo restauracemi, zdvořile odmítni a navrhni, s čím mu můžeš pomoci.
 Na konec každé odpovědi přidej přesně tento řádek s 3 krátkými návrhy dalších dotazů ve formátu:
 [NÁVRHY: "první návrh", "druhý návrh", "třetí návrh"]`;
+
+function getSystemPrompt() {
+  return `Dnešní datum je ${new Date().toISOString().slice(0, 10)}.\n${SYSTEM_PROMPT_BASE}`;
+}
 
 const PRICE_INPUT  = 0.80 / 1_000_000;
 const PRICE_OUTPUT = 4.00 / 1_000_000;
@@ -43,7 +46,7 @@ async function chatStream(userMessage, history = [], clientId = null, onToken, o
     const stream = client.messages.stream({
       model: 'claude-haiku-4-5-20251001',
       max_tokens: 1024,
-      system: SYSTEM_PROMPT,
+      system: getSystemPrompt(),
       tools: toolDefinitions,
       messages,
     });
@@ -113,7 +116,7 @@ async function chat(userMessage, history = [], clientId = null) {
     const response = await client.messages.create({
       model: 'claude-haiku-4-5-20251001',
       max_tokens: 1024,
-      system: SYSTEM_PROMPT,
+      system: getSystemPrompt(),
       tools: toolDefinitions,
       messages,
     });
