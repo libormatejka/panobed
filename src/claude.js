@@ -75,7 +75,9 @@ async function chatStream(userMessage, history = [], clientId = null, onToken, o
       console.log(`[chat:done] ${responseTimeMs}ms in=${totalInput} out=${totalOutput} cost=$${costUsd.toFixed(6)} reply="${replyPreview}"`);
 
       const updatedHistory = [...messages, { role: 'assistant', content: reply }];
-      onDone({ reply, history: updatedHistory, suggestions, responseTimeMs });
+      // Klientovi posíláme jen text zprávy – tool_use/tool_result bloky jsou velké a nepotřebné
+      const clientHistory = updatedHistory.filter(m => typeof m.content === 'string');
+      onDone({ reply, history: clientHistory, suggestions, responseTimeMs });
       return;
     }
 
