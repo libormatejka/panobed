@@ -39,7 +39,7 @@ if [ -d "$REPO_DIR" ]; then
   git -C "$REPO_DIR" pull
 else
   echo "[3/5] Klonování repozitáře..."
-  echo "Zadej URL git repozitáře (např. https://github.com/tvuj-nick/panobed.git):"
+  echo "Zadej URL git repozitáře (např. https://github.com/libormatejka/panobed.git):"
   read -r REPO_URL
   git clone "$REPO_URL" "$REPO_DIR"
 fi

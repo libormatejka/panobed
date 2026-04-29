@@ -105,7 +105,7 @@ prod-deploy:
 	sleep 3
 	$(COMPOSE_PROD) up -d --build
 
-SERVER = root@194.182.79.4
+SERVER = root@194.182.80.171
 
 # ── Produkční server ──────────────────────────────────────────────────────────
 
